@@ -278,6 +278,17 @@ browser-extension/*.zip
 browser-extension/dist/
 
 # ==================
+# Temporary Documentation (keep local, don't commit)
+# ==================
+**/CONNECTION_TEST.md
+**/FINAL_STATUS.md
+**/IMPLEMENTATION_SUMMARY.md
+**/STATUS.md
+**/ROADMAP_TO_10.md
+**/SCORE_10_OF_10.md
+**/INNOVATIONS.md
+
+# ==================
 # Misc
 # ==================
 *.pid
