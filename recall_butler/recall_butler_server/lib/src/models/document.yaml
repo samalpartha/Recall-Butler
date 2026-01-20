@@ -1,0 +1,20 @@
+class: Document
+table: documents
+fields:
+  userId: int
+  sourceType: String
+  title: String
+  sourceUrl: String?
+  mimeType: String?
+  extractedText: String?
+  summary: String?
+  keyFieldsJson: String?
+  status: String
+  errorMessage: String?
+indexes:
+  document_user_idx:
+    fields: userId
+  document_status_idx:
+    fields: status
+  document_user_status_idx:
+    fields: userId, status

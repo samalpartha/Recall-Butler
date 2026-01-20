@@ -1,0 +1,168 @@
+# ========================================
+# Recall Butler Flutter - .gitignore
+# ========================================
+
+# ==================
+# Secrets & Credentials
+# ==================
+# NEVER commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+assets/config.local.json
+lib/config/secrets.dart
+
+# Firebase
+google-services.json
+GoogleService-Info.plist
+firebase_app_id_file.json
+
+# ==================
+# Flutter/Dart
+# ==================
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+pubspec.lock
+build/
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# ==================
+# IDE
+# ==================
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ==================
+# Generated Documentation
+# ==================
+**/doc/api/
+dartdoc_options.yaml.bak
+
+# ==================
+# iOS
+# ==================
+ios/Pods/
+ios/Podfile.lock
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/ephemeral/
+ios/Flutter/app.flx
+ios/Flutter/App.framework
+ios/ServiceDefinitions.json
+ios/Runner/GeneratedPluginRegistrant.*
+**/ios/Flutter/.last_build_id
+
+# ==================
+# Android
+# ==================
+android/.gradle/
+android/captures/
+android/gradlew
+android/gradlew.bat
+android/local.properties
+android/key.properties
+android/*.jks
+android/*.keystore
+android/app/debug/
+android/app/profile/
+android/app/release/
+**/android/app/src/main/java/**/GeneratedPluginRegistrant.java
+
+# Build outputs
+android/app/build/
+**/flutter-apk/
+**/outputs/
+
+# ==================
+# macOS
+# ==================
+macos/Flutter/ephemeral/
+macos/Pods/
+macos/Podfile.lock
+
+# ==================
+# Windows
+# ==================
+windows/flutter/ephemeral/
+
+# ==================
+# Linux
+# ==================
+linux/flutter/ephemeral/
+
+# ==================
+# Web
+# ==================
+web/flutter_assets/
+web/canvaskit/
+
+# ==================
+# Build Artifacts
+# ==================
+*.apk
+*.aab
+*.ipa
+*.app
+*.exe
+*.appx
+*.msix
+
+# Symbolization
+app.*.symbols
+
+# Obfuscation
+app.*.map.json
+
+# ==================
+# Test Artifacts
+# ==================
+coverage/
+test-results/
+screenshots/
+*.png.backup
+
+# ==================
+# Logs
+# ==================
+*.log
+logs/
+
+# ==================
+# OS Generated
+# ==================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ==================
+# Miscellaneous
+# ==================
+*.class
+*.pyc
+.atom/
+.buildlog/
+.history
+.svn/
+*.bak
+*.tmp
+*.temp

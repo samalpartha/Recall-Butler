@@ -1,0 +1,103 @@
+# ========================================
+# Recall Butler Server - .gitignore
+# ========================================
+
+# ==================
+# Secrets & Credentials
+# ==================
+# CRITICAL: Never commit these files
+config/passwords.yaml
+config/passwords.json
+config/secrets.yaml
+config/secrets.json
+config/firebase_service_account_key.json
+config/google_credentials.json
+config/*_credentials.json
+config/*.pem
+config/*.key
+
+# API Keys
+api_keys.yaml
+api_keys.json
+openrouter.key
+.env
+.env.*
+!.env.example
+
+# ==================
+# Dart/Serverpod
+# ==================
+.dart_tool/
+.packages
+build/
+doc/api/
+pubspec.lock
+*.g.dart
+*.freezed.dart
+
+# ==================
+# Serverpod Generated
+# ==================
+# Keep generated code for consistency
+# generated/
+
+# Ignore the flutter web app directory (built assets)
+web/app/
+
+# ==================
+# Uploads & Storage
+# ==================
+uploads/
+storage/
+files/
+media/
+
+# ==================
+# Database
+# ==================
+*.db
+*.sqlite
+*.sql.backup
+pg_data/
+
+# ==================
+# Logs
+# ==================
+logs/
+*.log
+server.log
+error.log
+
+# ==================
+# Test Artifacts
+# ==================
+coverage/
+test-results/
+.test_runner/
+
+# ==================
+# IDE
+# ==================
+.idea/
+.vscode/
+*.iml
+
+# ==================
+# OS
+# ==================
+.DS_Store
+Thumbs.db
+
+# ==================
+# Docker
+# ==================
+docker-data/
+.docker/
+
+# ==================
+# Temporary
+# ==================
+tmp/
+temp/
+*.tmp
+*.bak

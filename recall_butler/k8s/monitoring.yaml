@@ -1,0 +1,95 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: recall-butler
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    
+    scrape_configs:
+      - job_name: 'recall-butler-server'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - recall-butler
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: recall-butler
+data:
+  recall-butler-dashboard.json: |
+    {
+      "dashboard": {
+        "title": "Recall Butler Metrics",
+        "panels": [
+          {
+            "title": "Request Rate",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total[5m])"
+              }
+            ]
+          },
+          {
+            "title": "Response Time (p95)",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, http_request_duration_seconds_bucket)"
+              }
+            ]
+          },
+          {
+            "title": "Error Rate",
+            "targets": [
+              {
+                "expr": "rate(http_requests_total{status=~\"5..\"}[5m])"
+              }
+            ]
+          },
+          {
+            "title": "Active Users",
+            "targets": [
+              {
+                "expr": "active_sessions_total"
+              }
+            ]
+          },
+          {
+            "title": "Vector Search Performance",
+            "targets": [
+              {
+                "expr": "vector_search_duration_seconds"
+              }
+            ]
+          },
+          {
+            "title": "Database Connection Pool",
+            "targets": [
+              {
+                "expr": "db_connections_active / db_connections_max"
+              }
+            ]
+          }
+        ]
+      }
+    }

@@ -1,0 +1,8 @@
+class: SearchResult
+fields:
+  documentId: int
+  chunkId: int
+  title: String
+  snippet: String
+  sourceType: String
+  similarity: double

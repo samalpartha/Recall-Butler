@@ -1,0 +1,6 @@
+class: SearchResponse
+fields:
+  query: String
+  answer: String
+  results: List<SearchResult>
+  totalResults: int

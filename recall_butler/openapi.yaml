@@ -1,0 +1,388 @@
+openapi: 3.0.3
+info:
+  title: Recall Butler API
+  description: |
+    AI-powered memory assistant with semantic search, collaborative knowledge management,
+    and intelligent automation.
+    
+    ## Features
+    - 🔐 JWT authentication with OAuth2
+    - 🔍 Semantic vector search with pgvector
+    - 🤖 AI agent automation (ReAct pattern)
+    - 📚 Knowledge graph exploration
+    - 🔒 End-to-end encryption
+    - 🔄 Real-time collaboration
+    - 📱 Multi-platform support
+    
+    ## Authentication
+    Most endpoints require a Bearer token in the Authorization header:
+    ```
+    Authorization: Bearer <your_jwt_token>
+    ```
+    
+  version: 2.0.0
+  contact:
+    name: Recall Butler Support
+    email: support@recallbutler.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.recallbutler.com/v1
+    description: Production server
+  - url: https://staging-api.recallbutler.com/v1
+    description: Staging server
+  - url: http://localhost:8180/v1
+    description: Local development
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Documents
+    description: Document ingestion, storage, and retrieval
+  - name: Search
+    description: Semantic and hybrid search
+  - name: AI Agent
+    description: Autonomous task execution
+  - name: Collaboration
+    description: Workspaces and sharing
+  - name: Knowledge Graph
+    description: Entity extraction and relationships
+  - name: Reminders
+    description: Smart reminders and notifications
+
+paths:
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                displayName:
+                  type: string
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email already registered
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /documents:
+    post:
+      tags: [Documents]
+      summary: Create document from text
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, content]
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                source:
+                  type: string
+                  enum: [text, url, file, email, voice]
+                metadata:
+                  type: object
+      responses:
+        '201':
+          description: Document created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    get:
+      tags: [Documents]
+      summary: List documents
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 200
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: sourceType
+          in: query
+          schema:
+            type: string
+            enum: [text, url, file, email, voice]
+      responses:
+        '200':
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+                  total:
+                    type: integer
+                  hasMore:
+                    type: boolean
+
+  /search:
+    post:
+      tags: [Search]
+      summary: Semantic search across documents
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query:
+                  type: string
+                  description: Search query
+                limit:
+                  type: integer
+                  default: 10
+                  maximum: 100
+                threshold:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 1
+                  default: 0.7
+                searchType:
+                  type: string
+                  enum: [semantic, keyword, hybrid]
+                  default: semantic
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SearchResult'
+                  query:
+                    type: string
+                  took:
+                    type: number
+                    description: Query execution time in ms
+
+  /agent/execute:
+    post:
+      tags: [AI Agent]
+      summary: Execute AI agent task
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [task]
+              properties:
+                task:
+                  type: string
+                  description: Task description for AI agent
+                allowedTools:
+                  type: array
+                  items:
+                    type: string
+                    enum: 
+                      - search_memories
+                      - create_reminder
+                      - check_calendar
+                      - summarize_document
+                      - find_connections
+                      - get_insights
+                context:
+                  type: object
+      responses:
+        '200':
+          description: Agent execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentResult'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    TokenPair:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+        tokenType:
+          type: string
+          default: Bearer
+
+    Document:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        sourceType:
+          type: string
+        summary:
+          type: string
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SearchResult:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        score:
+          type: number
+          format: float
+        highlights:
+          type: array
+          items:
+            type: string
+
+    AgentResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        answer:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentStep'
+        iterationsUsed:
+          type: integer
+
+    AgentStep:
+      type: object
+      properties:
+        iteration:
+          type: integer
+        thought:
+          type: string
+        action:
+          type: string
+        actionInput:
+          type: object
+        observation:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              details:
+                type: object
+
+    Unauthorized:
+      description: Unauthorized - Invalid or missing authentication token
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Unauthorized

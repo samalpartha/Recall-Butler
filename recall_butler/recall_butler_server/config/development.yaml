@@ -1,0 +1,42 @@
+# This is the configuration file for your local development environment.
+
+# Configuration for the main API server.
+apiServer:
+  port: 8180
+  publicHost: localhost
+  publicPort: 8180
+  publicScheme: http
+
+# Configuration for the Insights server.
+insightsServer:
+  port: 8181
+  publicHost: localhost
+  publicPort: 8181
+  publicScheme: http
+
+# Configuration for the web server.
+webServer:
+  port: 8182
+  publicHost: localhost
+  publicPort: 8182
+  publicScheme: http
+
+# This is the database setup for your server.
+database:
+  host: localhost
+  port: 8090
+  name: recall_butler
+  user: postgres
+
+# This is the setup for Redis.
+redis:
+  enabled: false
+  host: localhost
+  port: 8091
+
+maxRequestSize: 524288
+
+sessionLogs:
+  persistentEnabled: true
+  consoleEnabled: true
+  consoleLogFormat: text

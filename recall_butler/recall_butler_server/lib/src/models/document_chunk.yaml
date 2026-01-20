@@ -1,0 +1,12 @@
+class: DocumentChunk
+table: document_chunks
+fields:
+  documentId: int
+  chunkIndex: int
+  text: String
+  embeddingJson: String?
+indexes:
+  chunk_document_idx:
+    fields: documentId
+  chunk_document_index_idx:
+    fields: documentId, chunkIndex

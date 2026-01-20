@@ -1,0 +1,286 @@
+# ========================================
+# Recall Butler - Root .gitignore
+# ========================================
+
+# ==================
+# Secrets & API Keys
+# ==================
+# NEVER commit these files
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+.env
+.env.*
+!.env.example
+*.env.local
+.env.*.local
+secrets/
+secrets.yaml
+secrets.json
+**/passwords.yaml
+**/passwords.json
+**/*_credentials.json
+**/*_service_account*.json
+**/firebase_service_account*.json
+**/google-services.json
+**/GoogleService-Info.plist
+.netrc
+.npmrc
+.pypirc
+
+# OpenRouter / AI API Keys
+openrouter.key
+openai.key
+anthropic.key
+**/api_keys.yaml
+**/api_keys.json
+
+# MCP Config with secrets (contains API keys)
+mcp-config.json
+**/mcp-config.json
+
+# Setup scripts with secrets
+setup_env.sh
+**/setup_env.sh
+
+# Serverpod passwords
+**/config/passwords.yaml
+**/passwords.yaml
+
+# ==================
+# Flutter/Dart
+# ==================
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+*.log
+pubspec.lock
+.pub-cache/
+.pub/
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# Generated code
+**/generated/
+**/*.gen.dart
+
+# ==================
+# Serverpod
+# ==================
+.serverpod/
+**/config/passwords.yaml
+**/config/passwords.json
+**/uploads/
+**/storage/
+**/logs/
+
+# ==================
+# IDE & Editors
+# ==================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+.atom/
+
+# ==================
+# OS Generated
+# ==================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+*.lnk
+
+# ==================
+# Build Outputs
+# ==================
+/build/
+**/build/
+dist/
+out/
+*.apk
+*.aab
+*.ipa
+*.app
+*.exe
+*.dll
+*.so
+*.dylib
+
+# APK outputs (keep them local, don't commit)
+**/flutter-apk/
+**/outputs/
+**/release/
+
+# ==================
+# Test Outputs
+# ==================
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+test-results/
+**/allure-results/
+**/allure-report/
+**/screenshots/
+**/*.png.backup
+
+# E2E test artifacts
+e2e-tests/node_modules/
+e2e-tests/test-results/
+e2e-tests/playwright-report/
+
+# ==================
+# Dependencies
+# ==================
+node_modules/
+bower_components/
+vendor/
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+
+# ==================
+# Docker
+# ==================
+docker-data/
+.docker/
+*.tar
+*.tar.gz
+
+# ==================
+# Database
+# ==================
+*.db
+*.sqlite
+*.sqlite3
+*.sql.backup
+pg_data/
+redis_data/
+mongo_data/
+
+# ==================
+# Logs & Debug
+# ==================
+logs/
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+crash.log
+debug.log
+
+# ==================
+# Cache
+# ==================
+.cache/
+*.cache
+.parcel-cache/
+.next/
+.nuxt/
+.turbo/
+
+# ==================
+# Temporary Files
+# ==================
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# ==================
+# Documentation (auto-generated)
+# ==================
+doc/api/
+docs/_build/
+site/
+
+# ==================
+# iOS Specific
+# ==================
+**/ios/Pods/
+**/ios/Podfile.lock
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/app.flx
+**/ios/Flutter/App.framework
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# ==================
+# Android Specific
+# ==================
+**/android/.gradle/
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/app/src/main/java/**/GeneratedPluginRegistrant.java
+**/android/key.properties
+**/android/*.jks
+**/android/*.keystore
+
+# ==================
+# macOS Specific
+# ==================
+**/macos/Flutter/ephemeral/
+**/macos/Pods/
+
+# ==================
+# Windows Specific
+# ==================
+**/windows/flutter/ephemeral/
+
+# ==================
+# Linux Specific
+# ==================
+**/linux/flutter/ephemeral/
+
+# ==================
+# Web Specific
+# ==================
+**/web/flutter_assets/
+**/web/canvaskit/
+
+# ==================
+# Browser Extension
+# ==================
+browser-extension/*.crx
+browser-extension/*.xpi
+browser-extension/*.zip
+browser-extension/dist/
+
+# ==================
+# Misc
+# ==================
+*.pid
+*.seed
+*.pid.lock
+.lock-wscript
