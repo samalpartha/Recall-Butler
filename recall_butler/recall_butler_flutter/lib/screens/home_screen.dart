@@ -247,34 +247,61 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
 
   Widget _buildSemicircleItem(Map<String, dynamic> action, int index) {
     final color = action['color'] as Color;
+    final label = action['label'] as String;
+    final isMobile = Theme.of(context).platform == TargetPlatform.android || 
+                     Theme.of(context).platform == TargetPlatform.iOS;
     
     return MouseRegion(
-      onEnter: (_) => setState(() => _hoveredLabel = action['label'] as String),
+      onEnter: (_) => setState(() => _hoveredLabel = label),
       onExit: (_) => setState(() => _hoveredLabel = null),
       child: GestureDetector(
         onTap: () {
           _toggleQuickActions();
           (action['action'] as Function)();
         },
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color,
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.5),
-                blurRadius: 15,
-                spreadRadius: 2,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color,
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.5),
+                    blurRadius: 15,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Icon(
+                action['icon'] as IconData,
+                color: Colors.white,
+                size: 26,
+              ),
+            ),
+            // Show label on mobile, hide on web (web uses hover tooltip)
+            if (isMobile) ...[
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
-          ),
-          child: Icon(
-            action['icon'] as IconData,
-            color: Colors.white,
-            size: 26,
-          ),
+          ],
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:recall_butler_client/recall_butler_client.dart';
 import 'package:serverpod_flutter/serverpod_flutter.dart';
@@ -81,8 +82,41 @@ class ApiService {
   final OfflineService _offline = OfflineService();
   
   ApiService._internal() {
-    client = Client('http://localhost:8182/')
+    // Platform-specific base URL
+    // Web: localhost works normally
+    // Android emulator: 10.0.2.2 is the special alias for host machine
+    // Android device: would need actual IP address (TODO: make configurable)
+    final baseUrl = _getBaseUrl();
+    debugPrint('🌐 Initializing ApiService with base URL: $baseUrl');
+    
+    client = Client(baseUrl)
       ..connectivityMonitor = FlutterConnectivityMonitor();
+  }
+  
+  /// Get platform-specific base URL
+  String _getBaseUrl() {
+    if (kIsWeb) {
+      // Web: use localhost
+      return 'http://localhost:8182/';
+    } else {
+      // Mobile/Desktop: check platform
+      try {
+        if (Platform.isAndroid) {
+          // Android emulator: use special alias for host machine
+          return 'http://10.0.2.2:8182/';
+        } else if (Platform.isIOS) {
+          // iOS simulator: localhost works
+          return 'http://localhost:8182/';
+        } else {
+          // macOS, Windows, Linux: localhost
+          return 'http://localhost:8182/';
+        }
+      } catch (e) {
+        // Fallback if Platform is not available
+        debugPrint('⚠️ Platform detection failed, using localhost: $e');
+        return 'http://localhost:8182/';
+      }
+    }
   }
 
   /// Initialize offline support
