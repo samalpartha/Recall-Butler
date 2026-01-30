@@ -8,22 +8,27 @@ import 'help_screen.dart';
 import 'accessibility_screen.dart';
 import 'web5_profile_screen.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/settings_provider.dart';
+
+// ... imports remain ...
+
 /// Settings Screen with Profile & Logout
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
-  bool _notificationsEnabled = true;
-  bool _darkMode = true;
-  bool _offlineMode = true;
-  bool _biometricLock = false;
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  // Removed local state variables as we use provider now
 
   @override
   Widget build(BuildContext context) {
+    final settings = ref.watch(settingsProvider);
+    final notifier = ref.read(settingsProvider.notifier);
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -71,25 +76,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   icon: LucideIcons.bell,
                   title: 'Notifications',
                   subtitle: 'Receive smart reminders',
-                  value: _notificationsEnabled,
-                  onChanged: (v) => setState(() => _notificationsEnabled = v),
+                  value: settings.notificationsEnabled,
+                  onChanged: notifier.toggleNotifications,
                   color: VibrantTheme.primaryPink,
                 ),
                 _buildToggleTile(
                   icon: LucideIcons.moon,
                   title: 'Dark Mode',
                   subtitle: 'Use dark theme',
-                  value: _darkMode,
-                  onChanged: (v) => setState(() => _darkMode = v),
+                  value: settings.darkMode,
+                  onChanged: notifier.toggleDarkMode,
                   color: VibrantTheme.primaryPurple,
                 ),
                 _buildToggleTile(
                   icon: LucideIcons.wifiOff,
                   title: 'Offline Mode',
                   subtitle: 'Cache data for offline use',
-                  value: _offlineMode,
-                  onChanged: (v) => setState(() => _offlineMode = v),
+                  value: settings.offlineMode,
+                  onChanged: notifier.toggleOfflineMode,
                   color: VibrantTheme.primaryCyan,
+                ),
+              ])),
+
+              SliverToBoxAdapter(child: _buildSection('Butler Actions', [
+                 _buildToggleTile(
+                  icon: LucideIcons.shieldCheck,
+                  title: 'Require Confirmation',
+                  subtitle: 'Review actions before execution',
+                  value: settings.requireActionConfirmation,
+                  onChanged: notifier.toggleActionConfirmation,
+                  color: VibrantTheme.primaryBlue,
                 ),
               ])),
               
@@ -98,14 +114,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   icon: LucideIcons.fingerprint,
                   title: 'Biometric Lock',
                   subtitle: 'Require Face ID / Fingerprint',
-                  value: _biometricLock,
-                  onChanged: (v) => setState(() => _biometricLock = v),
+                  value: settings.biometricLock,
+                  onChanged: notifier.toggleBiometricLock,
                   color: VibrantTheme.primaryGreen,
                 ),
                 _buildNavigationTile(
                   icon: LucideIcons.shield,
-                  title: 'Web5 Identity',
-                  subtitle: 'Manage decentralized identity',
+                  title: 'Digital Vault',
+                  subtitle: 'Manage your keys & data',
                   color: Colors.deepPurple,
                   onTap: () => Navigator.push(
                     context,
@@ -115,16 +131,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ])),
               
               SliverToBoxAdapter(child: _buildSection('Support', [
-                _buildNavigationTile(
-                  icon: LucideIcons.helpCircle,
-                  title: 'Help & Guide',
-                  subtitle: 'Learn how to use the app',
-                  color: VibrantTheme.primaryBlue,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const HelpScreen()),
-                  ),
-                ),
                 _buildNavigationTile(
                   icon: LucideIcons.accessibility,
                   title: 'Accessibility',

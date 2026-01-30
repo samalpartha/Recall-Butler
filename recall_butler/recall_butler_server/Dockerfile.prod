@@ -1,5 +1,5 @@
 # Production Dockerfile for Recall Butler Server
-FROM dart:3.5.0 AS build
+FROM dart:stable AS build
 
 # Install Serverpod CLI
 RUN dart pub global activate serverpod_cli
@@ -16,8 +16,8 @@ RUN dart pub get
 # Copy source code
 COPY . .
 
-# Generate Serverpod code
-RUN serverpod generate
+# Serverpod generate run locally
+# RUN serverpod generate
 
 # Compile to native executable
 RUN dart compile exe bin/main.dart -o bin/server
@@ -29,9 +29,9 @@ FROM debian:bookworm-slim
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    libssl3 \
-    && rm -rf /var/lib/apt/lists/*
+  ca-certificates \
+  libssl3 \
+  && rm -rf /var/lib/apt/lists/*
 
 # Create app user
 RUN useradd -m -u 1000 appuser
@@ -42,12 +42,13 @@ WORKDIR /app
 # Copy compiled binary from build stage
 COPY --from=build /app/bin/server /app/server
 COPY --from=build /app/config/ /app/config/
+COPY --from=build /app/web/ /app/web/
 
 # Set ownership
 RUN chown -R appuser:appuser /app
 
 # Switch to non-root user
-USER appuser
+# USER appuser
 
 # Expose port
 EXPOSE 8180

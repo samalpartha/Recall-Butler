@@ -23,6 +23,7 @@ abstract class Document implements _i1.SerializableModel {
     this.extractedText,
     this.summary,
     this.keyFieldsJson,
+    this.contentHash,
     required this.status,
     this.errorMessage,
   });
@@ -37,6 +38,7 @@ abstract class Document implements _i1.SerializableModel {
     String? extractedText,
     String? summary,
     String? keyFieldsJson,
+    String? contentHash,
     required String status,
     String? errorMessage,
   }) = _DocumentImpl;
@@ -52,6 +54,7 @@ abstract class Document implements _i1.SerializableModel {
       extractedText: jsonSerialization['extractedText'] as String?,
       summary: jsonSerialization['summary'] as String?,
       keyFieldsJson: jsonSerialization['keyFieldsJson'] as String?,
+      contentHash: jsonSerialization['contentHash'] as String?,
       status: jsonSerialization['status'] as String,
       errorMessage: jsonSerialization['errorMessage'] as String?,
     );
@@ -78,6 +81,8 @@ abstract class Document implements _i1.SerializableModel {
 
   String? keyFieldsJson;
 
+  String? contentHash;
+
   String status;
 
   String? errorMessage;
@@ -95,6 +100,7 @@ abstract class Document implements _i1.SerializableModel {
     String? extractedText,
     String? summary,
     String? keyFieldsJson,
+    String? contentHash,
     String? status,
     String? errorMessage,
   });
@@ -111,6 +117,7 @@ abstract class Document implements _i1.SerializableModel {
       if (extractedText != null) 'extractedText': extractedText,
       if (summary != null) 'summary': summary,
       if (keyFieldsJson != null) 'keyFieldsJson': keyFieldsJson,
+      if (contentHash != null) 'contentHash': contentHash,
       'status': status,
       if (errorMessage != null) 'errorMessage': errorMessage,
     };
@@ -135,6 +142,7 @@ class _DocumentImpl extends Document {
     String? extractedText,
     String? summary,
     String? keyFieldsJson,
+    String? contentHash,
     required String status,
     String? errorMessage,
   }) : super._(
@@ -147,6 +155,7 @@ class _DocumentImpl extends Document {
          extractedText: extractedText,
          summary: summary,
          keyFieldsJson: keyFieldsJson,
+         contentHash: contentHash,
          status: status,
          errorMessage: errorMessage,
        );
@@ -165,6 +174,7 @@ class _DocumentImpl extends Document {
     Object? extractedText = _Undefined,
     Object? summary = _Undefined,
     Object? keyFieldsJson = _Undefined,
+    Object? contentHash = _Undefined,
     String? status,
     Object? errorMessage = _Undefined,
   }) {
@@ -182,6 +192,7 @@ class _DocumentImpl extends Document {
       keyFieldsJson: keyFieldsJson is String?
           ? keyFieldsJson
           : this.keyFieldsJson,
+      contentHash: contentHash is String? ? contentHash : this.contentHash,
       status: status ?? this.status,
       errorMessage: errorMessage is String? ? errorMessage : this.errorMessage,
     );

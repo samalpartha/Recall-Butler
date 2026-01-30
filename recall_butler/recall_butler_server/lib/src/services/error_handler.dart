@@ -79,6 +79,7 @@ class ErrorHandler {
     }
 
     // Determine error type and create appropriate response
+    /*
     if (error is ServerpodClientException) {
       return ApiError(
         code: ErrorCodes.serverError,
@@ -88,6 +89,7 @@ class ErrorHandler {
         traceId: traceId,
       );
     }
+    */
 
     if (error is FormatException) {
       return ApiError(

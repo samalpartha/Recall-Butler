@@ -1,0 +1,13 @@
+.dart_tool/
+.idea/
+build/
+.pub-cache/
+.DS_Store
+.git/
+.vscode/
+config/passwords.yaml
+config/passwords.yaml.example
+Dockerfile
+Dockerfile.prod
+deploy_gcp.sh
+create_secrets.sh

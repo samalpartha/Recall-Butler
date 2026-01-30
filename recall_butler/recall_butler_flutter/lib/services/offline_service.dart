@@ -6,10 +6,27 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 /// Offline sync service - handles local caching and sync queue
 class OfflineService {
+  static OfflineService? _mockInstance;
   static final OfflineService _instance = OfflineService._internal();
-  factory OfflineService() => _instance;
-  OfflineService._internal();
 
+  factory OfflineService() => _mockInstance ?? _instance;
+
+  OfflineService._internal() {
+    _connectivity = Connectivity();
+    _hive = Hive;
+  }
+
+  /// Constructor for testing
+  @visibleForTesting
+  OfflineService.test({
+    required Connectivity connectivity,
+    required HiveInterface hive,
+  }) {
+    _connectivity = connectivity;
+    _hive = hive;
+    _mockInstance = this;
+  }
+  
   // Hive boxes
   static const String _documentsBox = 'documents_cache';
   static const String _suggestionsBox = 'suggestions_cache';
@@ -21,8 +38,9 @@ class OfflineService {
   Box? _syncQueue;
   Box? _settings;
 
-  // Connectivity
-  final Connectivity _connectivity = Connectivity();
+  // Dependencies
+  late final Connectivity _connectivity;
+  late final HiveInterface _hive;
   StreamSubscription? _connectivitySubscription;
   
   bool _isOnline = true;
@@ -40,13 +58,17 @@ class OfflineService {
 
     try {
       // Initialize Hive
-      await Hive.initFlutter();
+      // Note: initFlutter is an extension method on HiveInterface in hive_flutter
+      // For testing, we might need to skip this or mock it differently if using strict mocks
+      if (_hive == Hive) {
+        await Hive.initFlutter();
+      }
 
       // Open boxes
-      _documents = await Hive.openBox(_documentsBox);
-      _suggestions = await Hive.openBox(_suggestionsBox);
-      _syncQueue = await Hive.openBox(_syncQueueBox);
-      _settings = await Hive.openBox(_settingsBox);
+      _documents = await _hive.openBox(_documentsBox);
+      _suggestions = await _hive.openBox(_suggestionsBox);
+      _syncQueue = await _hive.openBox(_syncQueueBox);
+      _settings = await _hive.openBox(_settingsBox);
 
       // Check initial connectivity
       final result = await _connectivity.checkConnectivity();
@@ -248,12 +270,25 @@ class OfflineService {
     }
   }
 
+  // Sync Handlers
+  final Map<String, Future<void> Function(Map<String, dynamic>)> _handlers = {};
+
+  /// Register a handler for a sync item type
+  void registerHandler(String type, Future<void> Function(Map<String, dynamic>) handler) {
+    _handlers[type] = handler;
+  }
+
   /// Execute a sync item
   Future<void> _executeSyncItem(SyncItem item) async {
-    // This will be called by the API service
-    // The actual implementation depends on the sync callback
-    if (item.syncCallback != null) {
+    final handler = _handlers[item.type];
+    if (handler != null) {
+      final data = Map<String, dynamic>.from(item.data);
+      data['__sync_id__'] = item.id;
+      await handler(data);
+    } else if (item.syncCallback != null) {
       await item.syncCallback!();
+    } else {
+      debugPrint('⚠️ No handler registered for sync type: ${item.type}');
     }
   }
 

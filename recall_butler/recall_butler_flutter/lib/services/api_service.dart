@@ -75,13 +75,37 @@ extension SuggestionHelpers on Suggestion {
 
 /// Singleton API service using Serverpod client with offline support
 class ApiService {
-  static final ApiService _instance = ApiService._internal();
-  factory ApiService() => _instance;
+  static ApiService? _instance;
   
+  /// Factory constructor returns the singleton instance
+  factory ApiService() => _instance ??= ApiService._internal();
+  
+  /// Test helper to reset the singleton
+  @visibleForTesting
+  static void reset() {
+    _instance = null;
+  }
+
   late Client client;
-  final OfflineService _offline = OfflineService();
+  late OfflineService _offline;
   
+  /// Internal constructor for singleton initialization
   ApiService._internal() {
+    _offline = OfflineService();
+    _initializeClient();
+    _registerSyncHandlers();
+  }
+
+  /// Constructor for testing with injected dependencies
+  @visibleForTesting
+  ApiService.test({required this.client, required OfflineService offlineService}) {
+    _offline = offlineService;
+    _instance = this; // Set this as the singleton
+    _registerSyncHandlers();
+  }
+
+  /// Initialize the Serverpod client with platform-specific config
+  void _initializeClient() {
     // Platform-specific base URL
     // Web: localhost works normally
     // Android emulator: 10.0.2.2 is the special alias for host machine
@@ -93,28 +117,83 @@ class ApiService {
       ..connectivityMonitor = FlutterConnectivityMonitor();
   }
   
+  void _registerSyncHandlers() {
+    // Text Document
+    _offline.registerHandler('create_document_text', (data) async {
+      final title = data['title'] as String;
+      final text = data['text'] as String;
+      final userId = data['userId'] as int;
+      final tempId = data['__sync_id__'] as String;
+      
+      debugPrint('🔄 Syncing text document: $title');
+      await createFromText(title: title, text: text, userId: userId);
+      await _offline.removeCachedDocument(tempId); // Remove temp doc
+    });
+
+    // URL Document
+    _offline.registerHandler('create_document_url', (data) async {
+      final title = data['title'] as String;
+      final url = data['url'] as String;
+      final userId = data['userId'] as int;
+      final tempId = data['__sync_id__'] as String;
+
+      debugPrint('🔄 Syncing URL document: $title');
+      await createFromUrl(title: title, url: url, userId: userId);
+      await _offline.removeCachedDocument(tempId);
+    });
+
+    // Delete Document
+    _offline.registerHandler('delete_document', (data) async {
+      final id = data['id'] as int;
+      debugPrint('🔄 Syncing delete document: $id');
+      await deleteDocument(id);
+    });
+    
+    // Create Reminder
+    _offline.registerHandler('create_reminder', (data) async {
+      final documentId = data['documentId'] as int;
+      final title = data['title'] as String;
+      final description = data['description'] as String;
+      final scheduledAt = DateTime.parse(data['scheduledAt'] as String);
+      final userId = data['userId'] as int;
+      
+      debugPrint('🔄 Syncing reminder: $title');
+      await createReminder(
+        documentId: documentId,
+        title: title,
+        description: description,
+        scheduledAt: scheduledAt,
+        userId: userId,
+      );
+    });
+  }
+  
   /// Get platform-specific base URL
   String _getBaseUrl() {
+    // allow compile-time configuration for production
+    const configuredUrl = String.fromEnvironment('BACKEND_URL');
+    if (configuredUrl.isNotEmpty) return configuredUrl;
+
     if (kIsWeb) {
       // Web: use localhost
-      return 'http://localhost:8182/';
+      return 'http://localhost:8180/';
     } else {
       // Mobile/Desktop: check platform
       try {
         if (Platform.isAndroid) {
           // Android emulator: use special alias for host machine
-          return 'http://10.0.2.2:8182/';
+          return 'http://10.0.2.2:8180/';
         } else if (Platform.isIOS) {
           // iOS simulator: localhost works
-          return 'http://localhost:8182/';
+          return 'http://localhost:8180/';
         } else {
           // macOS, Windows, Linux: localhost
-          return 'http://localhost:8182/';
+          return 'http://localhost:8180/';
         }
       } catch (e) {
         // Fallback if Platform is not available
         debugPrint('⚠️ Platform detection failed, using localhost: $e');
-        return 'http://localhost:8182/';
+        return 'http://localhost:8180/';
       }
     }
   }
@@ -231,6 +310,33 @@ class ApiService {
     }
   }
 
+  Future<Document> createFromImage({
+    required String title,
+    required String imageBase64,
+    required String type,
+    int userId = 1,
+  }) async {
+    if (_offline.isOnline) {
+      try {
+        final doc = await client.document.createFromImage(
+          title: title,
+          imageBase64: imageBase64,
+          type: type,
+          userId: userId,
+        );
+        await _offline.cacheDocument(doc.toMap());
+        return doc;
+      } catch (e) {
+        debugPrint('❌ Image create requires online: $e');
+        // Images generally need network for AI processing
+        // We could store locally and sync later, but for now we'll require online
+        throw OfflineException('Scanning documents requires network connection');
+      }
+    } else {
+      throw OfflineException('Scanning documents requires network connection');
+    }
+  }
+
   Future<List<Document>> getDocuments({int userId = 1, int limit = 50}) async {
     if (_offline.isOnline) {
       try {
@@ -238,7 +344,12 @@ class ApiService {
         // Cache all documents
         await _offline.cacheDocuments(docs.map((d) => d.toMap()).toList());
         await _offline.updateLastSyncTime();
-        return docs;
+
+        // Merge with pending local documents
+        final cached = _getCachedDocuments();
+        final pending = cached.where((d) => d.status == 'PENDING_SYNC').toList();
+        
+        return [...pending, ...docs];
       } catch (e) {
         debugPrint('❌ Online fetch failed, using cache: $e');
         return _getCachedDocuments();
@@ -696,6 +807,34 @@ class ApiService {
         'connections': edges.length,
       },
     };
+  }
+
+  // ============ Action Operations ============
+
+  Future<ButlerAction?> objectify(String text) async {
+    if (_offline.isOnline) {
+      try {
+        return await client.action.objectify(text);
+      } catch (e) {
+        debugPrint('❌ Objectify failed: $e');
+        return null;
+      }
+    } else {
+      throw OfflineException('Action parsing requires network connection');
+    }
+  }
+
+  Future<bool> executeAction(ButlerAction action) async {
+    if (_offline.isOnline) {
+      try {
+        return await client.action.execute(action);
+      } catch (e) {
+         debugPrint('❌ Action execution failed: $e');
+         return false;
+      }
+    } else {
+      throw OfflineException('Action execution requires network connection');
+    }
   }
 }
 

@@ -110,7 +110,7 @@ class _SmartRemindersScreenState extends ConsumerState<SmartRemindersScreen>
 
   Widget _buildSuggestionsBanner(List<Map<String, dynamic>> suggestions) {
     return Container(
-      height: 100,
+      height: 120,
       margin: const EdgeInsets.all(16),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,

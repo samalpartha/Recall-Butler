@@ -147,6 +147,32 @@ class _HelpScreenState extends State<HelpScreen> {
       ],
     ),
     _HelpSection(
+      id: 'actions',
+      icon: LucideIcons.zap,
+      title: 'Butler Actions',
+      color: AppTheme.accentCyan,
+      items: [
+        _HelpItem(
+          title: '⚡ Command Bar',
+          content: 'Press Cmd+K to open. Type "Remind me..." to act instantly.',
+          icon: LucideIcons.command,
+        ),
+        _HelpItem(
+          title: '🤖 Smart Actions',
+          content: 'Butler understands natural language commands:\n'
+              '• "Remind me to call Mom at 5pm"\n'
+              '• "Draft email to John"\n'
+              '• "Schedule Dentist for Tuesday"',
+          icon: LucideIcons.bot,
+        ),
+        _HelpItem(
+          title: '🛡️ Safety First',
+          content: 'Preview and confirm every action before it runs.',
+          icon: LucideIcons.shieldCheck,
+        ),
+      ],
+    ),
+    _HelpSection(
       id: 'innovations',
       icon: LucideIcons.rocket,
       title: 'Innovation Features',
@@ -202,7 +228,8 @@ class _HelpScreenState extends State<HelpScreen> {
               '• View cached documents\n'
               '• Basic text search available\n'
               '• Add new memories (sync later)\n'
-              '• Red banner shows offline status',
+              '• Red banner shows offline status\n'
+              '• "Pending Sync" badge on new items',
           icon: LucideIcons.cloudOff,
         ),
         _HelpItem(

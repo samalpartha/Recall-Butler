@@ -348,7 +348,7 @@ class AuthService {
     while (padded.length % 4 != 0) {
       padded += '=';
     }
-    return utf8.decode(base64UrlDecode(padded));
+    return utf8.decode(base64Url.decode(padded));
   }
 
   bool _constantTimeCompare(String a, String b) {

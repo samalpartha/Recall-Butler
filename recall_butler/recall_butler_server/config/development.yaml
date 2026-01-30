@@ -34,7 +34,7 @@ redis:
   host: localhost
   port: 8091
 
-maxRequestSize: 524288
+maxRequestSize: 104857600
 
 sessionLogs:
   persistentEnabled: true

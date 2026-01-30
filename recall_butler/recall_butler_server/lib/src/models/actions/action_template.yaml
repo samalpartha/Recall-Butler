@@ -1,0 +1,6 @@
+class: ActionTemplate
+fields:
+  type: String
+  description: String
+  requiredFields: List<String>
+  example: String

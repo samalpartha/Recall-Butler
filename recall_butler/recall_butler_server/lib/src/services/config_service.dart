@@ -1,3 +1,4 @@
+import 'package:serverpod/serverpod.dart';
 import 'dart:io';
 
 /// Environment-based configuration service
@@ -42,8 +43,23 @@ class ConfigService {
     Platform.environment['DB_PASSWORD'] ?? 'postgres';
 
   /// OpenRouter AI Configuration
-  String? get openRouterApiKey => 
-    Platform.environment['OPENROUTER_API_KEY'];
+  String? get openRouterApiKey {
+      // 1. Check environment variable (highest priority)
+      final envKey = Platform.environment['OPENROUTER_API_KEY'];
+      if (envKey != null && envKey.isNotEmpty) {
+        return envKey;
+      }
+      
+      return null;
+      // 2. Check Serverpod passwords (passwords.yaml)
+      /*
+      try {
+        return Serverpod.instance.getPassword('openRouterApiKey');
+      } catch (e) {
+        return null;
+      }
+      */
+  }
   
   String get openRouterBaseUrl => 
     Platform.environment['OPENROUTER_BASE_URL'] ?? 'https://openrouter.ai/api/v1';

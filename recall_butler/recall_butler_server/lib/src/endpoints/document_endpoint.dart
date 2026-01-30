@@ -4,12 +4,30 @@ import 'package:serverpod/serverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as html_parser;
 import '../generated/protocol.dart';
+import '../services/ai_service.dart';
+
+import 'package:crypto/crypto.dart';
 
 class DocumentEndpoint extends Endpoint {
   // Cerebras API configuration
   static const String _cerebrasApiUrl = 'https://api.cerebras.ai/v1/chat/completions';
   
   String get _cerebrasApiKey => Platform.environment['CEREBRAS_API_KEY'] ?? '';
+
+  /// Calculate SHA-256 hash of content to ensure idempotency
+  String _calculateHash(String content) {
+    var bytes = utf8.encode(content);
+    var digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
+  /// Check if document with hash already exists
+  Future<Document?> _findDuplicate(Session session, int userId, String hash) async {
+    return await Document.db.findFirstRow(
+      session,
+      where: (t) => t.userId.equals(userId) & t.contentHash.equals(hash),
+    );
+  }
 
   /// Create a new document from text
   Future<Document> createFromText(
@@ -18,6 +36,14 @@ class DocumentEndpoint extends Endpoint {
     required String text,
     int userId = 1,
   }) async {
+    // IDEMPOTENCY CHECK
+    final hash = _calculateHash(text);
+    final existing = await _findDuplicate(session, userId, hash);
+    if (existing != null) {
+      print('Returning existing document for hash: $hash');
+      return existing;
+    }
+
     // Generate AI summary
     final summary = await _generateSummary(text);
     
@@ -32,13 +58,14 @@ class DocumentEndpoint extends Endpoint {
       extractedText: text,
       summary: summary,
       keyFieldsJson: jsonEncode(keyFields),
+      contentHash: hash,
       status: 'READY',
     );
     
     final doc = await Document.db.insertRow(session, document);
     
     // Create chunk with embedding
-    final embedding = _generateEmbedding(text.substring(0, text.length.clamp(0, 2000)));
+    final embedding = await _generateEmbedding(text.substring(0, text.length.clamp(0, 2000)));
     final chunk = DocumentChunk(
       documentId: doc.id!,
       chunkIndex: 0,
@@ -60,8 +87,20 @@ class DocumentEndpoint extends Endpoint {
     required String url,
     int userId = 1,
   }) async {
+    // IDEMPOTENCY CHECK (using URL as the unique key for now, or fetch content first)
+    // Better to fetch content then hash it, but URL is also a strong proxy.
+    // Let's use URL hash for initial check to avoid fetch if possible? 
+    // No, content can change. Let's fetch first.
+    
     // Extract text from URL
     final text = await _extractFromUrl(url);
+    
+    // Hash the extracted text
+    final hash = _calculateHash(text);
+    final existing = await _findDuplicate(session, userId, hash);
+    if (existing != null) {
+      return existing;
+    }
     
     // Generate AI summary
     final summary = await _generateSummary(text);
@@ -78,13 +117,14 @@ class DocumentEndpoint extends Endpoint {
       extractedText: text,
       summary: summary,
       keyFieldsJson: jsonEncode(keyFields),
+      contentHash: hash,
       status: 'READY',
     );
     
     final doc = await Document.db.insertRow(session, document);
     
     // Create chunk with embedding
-    final embedding = _generateEmbedding(text.substring(0, text.length.clamp(0, 2000)));
+    final embedding = await _generateEmbedding(text.substring(0, text.length.clamp(0, 2000)));
     final chunk = DocumentChunk(
       documentId: doc.id!,
       chunkIndex: 0,
@@ -99,6 +139,72 @@ class DocumentEndpoint extends Endpoint {
     return doc;
   }
 
+  /// Create a new document from image (base64)
+  Future<Document> createFromImage(
+    Session session, {
+    required String title,
+    required String imageBase64,
+    required String type, // 'receipt', 'invoice', etc.
+    int userId = 1,
+  }) async {
+    // IDEMPOTENCY CHECK
+    // Hash the base64 image content itself to avoid re-processing same image
+    final hash = _calculateHash(imageBase64);
+    final existing = await _findDuplicate(session, userId, hash);
+    if (existing != null) {
+      return existing;
+    }
+
+    print('DEBUG: createFromImage called. Title: $title, Type: $type, ImageLength: ${imageBase64.length}');
+    final aiService = AIService();
+    
+    // 1. Extract text using AI Vision
+    final prompt = 'Transcribe all text from this $type exactly as it appears. preserves structure.';
+    final text = await aiService.chatWithVision(
+      prompt: prompt,
+      imageBase64: imageBase64,
+      model: 'openai/gpt-4o', // Use high quality for OCR
+    );
+    
+    // 2. Normalize and fix common OCR errors if needed (optional)
+    
+    // 3. Generate summary of extracted text
+    final summary = await _generateSummary(text);
+    
+    // 4. Extract key fields
+    final keyFields = await _extractFields(text);
+    
+    // 5. Create document
+    final document = Document(
+      userId: userId,
+      sourceType: 'image',
+      title: title,
+      extractedText: text,
+      summary: summary,
+      keyFieldsJson: jsonEncode(keyFields),
+      contentHash: hash, // Storing hash of Image Base64, or Text? Let's store Image Hash for strict file dup detection.
+      status: 'READY',
+      mimeType: 'image/jpeg', // Assuming jpeg for now
+    );
+    
+    final doc = await Document.db.insertRow(session, document);
+    
+    // 6. Create chunk with embedding
+    final embedding = await _generateEmbedding(text.substring(0, text.length.clamp(0, 2000)));
+    final chunk = DocumentChunk(
+      documentId: doc.id!,
+      chunkIndex: 0,
+      text: text.substring(0, text.length.clamp(0, 4000)),
+      embeddingJson: jsonEncode(embedding),
+    );
+    await DocumentChunk.db.insertRow(session, chunk);
+    
+    // 7. Generate suggestion
+    await _generateSuggestion(session, doc, summary, keyFields);
+    
+    return doc;
+  }
+  
   /// Get all documents for a user
   Future<List<Document>> getDocuments(Session session, {int userId = 1, int limit = 50}) async {
     return await Document.db.find(
@@ -148,77 +254,24 @@ class DocumentEndpoint extends Endpoint {
 
   // AI Helper Methods
   Future<String> _generateSummary(String text) async {
-    if (_cerebrasApiKey.isEmpty) {
-      return 'Summary: ${text.substring(0, text.length.clamp(0, 200))}...';
-    }
+    if (text.isEmpty) return 'No text extracted.';
     
-    try {
-      final response = await http.post(
-        Uri.parse(_cerebrasApiUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_cerebrasApiKey',
-        },
-        body: jsonEncode({
-          'model': 'llama-3.3-70b',
-          'messages': [
-            {'role': 'user', 'content': 'Summarize this in 2-3 sentences:\n\n$text'}
-          ],
-          'max_completion_tokens': 150,
-          'temperature': 0.3,
-        }),
-      );
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['choices'][0]['message']['content'];
-      }
-    } catch (e) {
-      print('Summary error: $e');
-    }
-    
-    return 'Summary: ${text.substring(0, text.length.clamp(0, 200))}...';
+    final aiService = AIService();
+    // Use AIService wrapper instead of direct Cerebras implementation
+    // This unifies our AI calls
+    return aiService.summarize(text: text);
   }
 
   Future<Map<String, dynamic>> _extractFields(String text) async {
-    if (_cerebrasApiKey.isEmpty) return {};
+    if (text.isEmpty) return {};
     
-    try {
-      final response = await http.post(
-        Uri.parse(_cerebrasApiUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_cerebrasApiKey',
-        },
-        body: jsonEncode({
-          'model': 'llama-3.3-70b',
-          'messages': [
-            {'role': 'user', 'content': 'Extract key fields (dates, amounts, names, locations) from this text as a JSON object. Return ONLY valid JSON:\n\n$text'}
-          ],
-          'max_completion_tokens': 200,
-          'temperature': 0.1,
-        }),
-      );
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final content = data['choices'][0]['message']['content'];
-        final jsonMatch = RegExp(r'\{[^}]+\}').firstMatch(content);
-        if (jsonMatch != null) {
-          return jsonDecode(jsonMatch.group(0)!);
-        }
-      }
-    } catch (e) {
-      print('Field extraction error: $e');
-    }
-    
-    return {};
+    final aiService = AIService();
+    return aiService.extractKeyFields(text: text, documentType: 'document');
   }
 
-  List<double> _generateEmbedding(String text) {
-    // Simple hash-based pseudo-embedding for demo
-    final hash = text.hashCode;
-    return List.generate(1536, (i) => ((hash * (i + 1)) % 10000) / 10000.0);
+  Future<List<double>> _generateEmbedding(String text) async {
+    final aiService = AIService();
+    return aiService.generateEmbedding(text);
   }
 
   Future<String> _extractFromUrl(String url) async {

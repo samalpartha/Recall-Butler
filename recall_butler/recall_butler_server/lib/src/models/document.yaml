@@ -9,6 +9,7 @@ fields:
   extractedText: String?
   summary: String?
   keyFieldsJson: String?
+  contentHash: String?
   status: String
   errorMessage: String?
 indexes:
@@ -18,3 +19,6 @@ indexes:
     fields: status
   document_user_status_idx:
     fields: userId, status
+  document_hash_idx:
+    fields: userId, contentHash
+    unique: false

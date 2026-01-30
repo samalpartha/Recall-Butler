@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cunning_document_scanner/cunning_document_scanner.dart';
 
 import '../theme/app_theme.dart';
 import '../providers/documents_provider.dart';
@@ -28,6 +30,8 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> {
   bool _isProcessing = false;
   bool _isSaving = false;
   String _selectedType = 'receipt';
+  List<String> _scannedPages = [];
+  int _currentPageIndex = 0;
 
   final List<Map<String, dynamic>> _documentTypes = [
     {'type': 'receipt', 'label': 'Receipt', 'icon': LucideIcons.receipt},
@@ -46,16 +50,74 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> {
 
   Future<void> _pickFromCamera() async {
     try {
+      // Use Professional Document Scanner on Mobile (Android/iOS)
+      // Cunning Document Scanner: https://github.com/jachzen/cunning_document_scanner
+      final platform = Theme.of(context).platform;
+      final isMobile = !kIsWeb && (platform == TargetPlatform.android || platform == TargetPlatform.iOS);
+      
+      if (isMobile) {
+        List<String> pictures;
+        
+        if (platform == TargetPlatform.android) {
+          // Android: Allow multiple pages + gallery import
+          pictures = await CunningDocumentScanner.getPictures(
+            noOfPages: 10, // Allow up to 10 pages
+            isGalleryImportAllowed: true, // Allow gallery import
+          ) ?? [];
+        } else {
+          // iOS: Use JPEG for smaller file sizes
+          pictures = await CunningDocumentScanner.getPictures(
+            iosScannerOptions: IosScannerOptions(
+              imageFormat: IosImageFormat.jpg,
+              jpgCompressionQuality: 0.8, // 80% quality for good balance
+            ),
+          ) ?? [];
+        }
+        
+        if (pictures.isNotEmpty) {
+          _scannedPages = pictures;
+          final xfile = XFile(pictures.first);
+          final bytes = await xfile.readAsBytes();
+          
+          setState(() {
+            _imageBytes = bytes;
+            _imagePath = pictures.first;
+          });
+          
+          // Show page count if multiple
+          if (pictures.length > 1 && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(LucideIcons.files, color: Colors.white, size: 18),
+                    const SizedBox(width: 12),
+                    Text('${pictures.length} pages scanned!'),
+                  ],
+                ),
+                backgroundColor: AppTheme.statusReady,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+          
+          _extractText();
+        }
+        return;
+      }
+
+      // Fallback to Standard Camera for Web/Desktop
       final XFile? image = await _picker.pickImage(
         source: ImageSource.camera,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 70,
         preferredCameraDevice: CameraDevice.rear,
       );
 
       if (image != null) {
         final bytes = await image.readAsBytes();
+        print('DEBUG: Camera Image Size: ${bytes.length} bytes');
         setState(() {
           _imageBytes = bytes;
           _imagePath = image.path;
@@ -66,7 +128,7 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Camera error: $e'),
+            content: Text('Scanner error: $e'),
             backgroundColor: AppTheme.statusFailed,
           ),
         );
@@ -78,13 +140,14 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> {
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 70,
       );
 
       if (image != null) {
         final bytes = await image.readAsBytes();
+        print('DEBUG: Gallery Image Size: ${bytes.length} bytes');
         setState(() {
           _imageBytes = bytes;
           _imagePath = image.path;
@@ -104,52 +167,24 @@ class _CameraCaptureScreenState extends ConsumerState<CameraCaptureScreen> {
   }
 
   Future<void> _extractText() async {
+    if (_imageBytes == null) return;
+    
     setState(() => _isProcessing = true);
 
     try {
-      await Future.delayed(const Duration(seconds: 2));
+      // Convert image to base64
+      final base64Image = base64Encode(_imageBytes!);
       
-      String extractedText;
-      String suggestedTitle;
+      // Call server endpoint
+      final result = await ref.read(documentsProvider.notifier).createFromImage(
+        title: 'Scanned ${_selectedType.capitalize()} - ${DateTime.now().toString().substring(0, 16)}',
+        imageBase64: base64Image,
+        type: _selectedType,
+      );
       
-      switch (_selectedType) {
-        case 'receipt':
-          suggestedTitle = 'Receipt - ${DateTime.now().toString().substring(0, 10)}';
-          extractedText = '''Store: Grocery Mart
-Date: ${DateTime.now().toString().substring(0, 10)}
-Items:
-- Milk \$3.99
-- Bread \$2.49
-- Eggs \$4.99
-Total: \$11.47
-Payment: Credit Card ending 4321''';
-          break;
-        case 'invoice':
-          suggestedTitle = 'Invoice #${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
-          extractedText = '''Invoice #${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}
-Date: ${DateTime.now().toString().substring(0, 10)}
-Due: ${DateTime.now().add(const Duration(days: 30)).toString().substring(0, 10)}
-Amount: \$150.00
-Description: Professional Services''';
-          break;
-        case 'card':
-          suggestedTitle = 'Business Card';
-          extractedText = '''John Smith
-Senior Developer
-Acme Corporation
-
-Email: john@acme.com
-Phone: (555) 123-4567
-Website: www.acme.com''';
-          break;
-        default:
-          suggestedTitle = 'Scanned ${_selectedType.capitalize()} - ${DateTime.now().toString().substring(0, 10)}';
-          extractedText = 'Scanned document content would appear here after OCR processing.';
-      }
-
       setState(() {
-        _titleController.text = suggestedTitle;
-        _textController.text = extractedText;
+        _titleController.text = result.title;
+        _textController.text = result.extractedText ?? 'No text extracted.';
       });
 
       if (mounted) {
@@ -238,8 +273,21 @@ Website: www.acme.com''';
     setState(() {
       _imageBytes = null;
       _imagePath = null;
+      _scannedPages = [];
+      _currentPageIndex = 0;
       _titleController.clear();
       _textController.clear();
+    });
+  }
+
+  Future<void> _switchPage(int index) async {
+    if (index < 0 || index >= _scannedPages.length) return;
+    final xfile = XFile(_scannedPages[index]);
+    final bytes = await xfile.readAsBytes();
+    setState(() {
+      _currentPageIndex = index;
+      _imageBytes = bytes;
+      _imagePath = _scannedPages[index];
     });
   }
 
@@ -366,6 +414,7 @@ Website: www.acme.com''';
                         ),
                       ),
                     ),
+                    // Close button
                     Positioned(
                       top: 8,
                       right: 8,
@@ -381,6 +430,72 @@ Website: www.acme.com''';
                         ),
                       ),
                     ),
+                    // Multi-page navigation (Cunning Document Scanner supports multiple pages)
+                    if (_scannedPages.length > 1) ...[
+                      // Page indicator
+                      Positioned(
+                        bottom: 12,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.black87,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'Page ${_currentPageIndex + 1} of ${_scannedPages.length}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Previous button
+                      if (_currentPageIndex > 0)
+                        Positioned(
+                          left: 8,
+                          top: 0,
+                          bottom: 0,
+                          child: Center(
+                            child: IconButton(
+                              onPressed: () => _switchPage(_currentPageIndex - 1),
+                              icon: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(LucideIcons.chevronLeft, size: 22, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ),
+                      // Next button
+                      if (_currentPageIndex < _scannedPages.length - 1)
+                        Positioned(
+                          right: 8,
+                          top: 0,
+                          bottom: 0,
+                          child: Center(
+                            child: IconButton(
+                              onPressed: () => _switchPage(_currentPageIndex + 1),
+                              icon: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(LucideIcons.chevronRight, size: 22, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                     if (_isProcessing)
                       Positioned.fill(
                         child: Container(

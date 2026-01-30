@@ -121,7 +121,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen>
     ];
 
     return SizedBox(
-      height: 100,
+      height: 110,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: stats.length,

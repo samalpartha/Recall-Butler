@@ -1,0 +1,11 @@
+class: Reminder
+table: reminders
+fields:
+  userId: int
+  title: String
+  description: String?
+  dueAt: DateTime?
+  isCompleted: bool
+  priority: int
+  createdAt: DateTime
+  updatedAt: DateTime?

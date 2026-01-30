@@ -16,13 +16,16 @@ import 'package:serverpod_client/serverpod_client.dart' as _i2;
 import 'dart:async' as _i3;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _i4;
-import 'package:recall_butler_client/src/protocol/document.dart' as _i5;
-import 'package:recall_butler_client/src/protocol/search_response.dart' as _i6;
-import 'package:recall_butler_client/src/protocol/search_result.dart' as _i7;
-import 'package:recall_butler_client/src/protocol/suggestion.dart' as _i8;
+import 'package:recall_butler_client/src/protocol/actions/butler_action.dart'
+    as _i5;
+import 'package:recall_butler_client/src/protocol/document.dart' as _i6;
+import 'package:recall_butler_client/src/protocol/reminder.dart' as _i7;
+import 'package:recall_butler_client/src/protocol/search_response.dart' as _i8;
+import 'package:recall_butler_client/src/protocol/search_result.dart' as _i9;
+import 'package:recall_butler_client/src/protocol/suggestion.dart' as _i10;
 import 'package:recall_butler_client/src/protocol/greetings/greeting.dart'
-    as _i9;
-import 'protocol.dart' as _i10;
+    as _i11;
+import 'protocol.dart' as _i12;
 
 /// By extending [EmailIdpBaseEndpoint], the email identity provider endpoints
 /// are made available on the server and enable the corresponding sign-in widget
@@ -239,6 +242,199 @@ class EndpointJwtRefresh extends _i4.EndpointRefreshJwtTokens {
 }
 
 /// {@category Endpoint}
+class EndpointAction extends _i2.EndpointRef {
+  EndpointAction(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'action';
+
+  _i3.Future<_i5.ButlerAction?> objectify(String text) =>
+      caller.callServerEndpoint<_i5.ButlerAction?>(
+        'action',
+        'objectify',
+        {'text': text},
+      );
+
+  _i3.Future<bool> execute(_i5.ButlerAction action) =>
+      caller.callServerEndpoint<bool>(
+        'action',
+        'execute',
+        {'action': action},
+      );
+}
+
+/// Analytics endpoint for usage statistics and insights
+/// {@category Endpoint}
+class EndpointAnalytics extends _i2.EndpointRef {
+  EndpointAnalytics(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'analytics';
+
+  /// Get overall analytics summary
+  _i3.Future<Map<String, dynamic>> getSummary() =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'analytics',
+        'getSummary',
+        {},
+      );
+
+  /// Get document activity over time (last 30 days)
+  _i3.Future<List<Map<String, dynamic>>> getActivityTimeline() =>
+      caller.callServerEndpoint<List<Map<String, dynamic>>>(
+        'analytics',
+        'getActivityTimeline',
+        {},
+      );
+
+  /// Get document type distribution
+  _i3.Future<List<Map<String, dynamic>>> getDocumentTypes() =>
+      caller.callServerEndpoint<List<Map<String, dynamic>>>(
+        'analytics',
+        'getDocumentTypes',
+        {},
+      );
+
+  /// Get top search queries
+  _i3.Future<List<Map<String, dynamic>>> getTopSearches({required int limit}) =>
+      caller.callServerEndpoint<List<Map<String, dynamic>>>(
+        'analytics',
+        'getTopSearches',
+        {'limit': limit},
+      );
+
+  /// Get memory insights (AI-generated observations)
+  _i3.Future<Map<String, dynamic>> getInsights() =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'analytics',
+        'getInsights',
+        {},
+      );
+
+  /// Get knowledge graph data (connections between documents)
+  _i3.Future<Map<String, dynamic>> getKnowledgeGraph() =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'analytics',
+        'getKnowledgeGraph',
+        {},
+      );
+}
+
+/// Authentication Endpoint - Handles user auth flows
+/// {@category Endpoint}
+class EndpointAuth extends _i2.EndpointRef {
+  EndpointAuth(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'auth';
+
+  /// Register a new user
+  _i3.Future<Map<String, dynamic>> register({
+    required String email,
+    required String password,
+    required String name,
+  }) => caller.callServerEndpoint<Map<String, dynamic>>(
+    'auth',
+    'register',
+    {
+      'email': email,
+      'password': password,
+      'name': name,
+    },
+  );
+
+  /// Login with email and password
+  _i3.Future<Map<String, dynamic>> login({
+    required String email,
+    required String password,
+  }) => caller.callServerEndpoint<Map<String, dynamic>>(
+    'auth',
+    'login',
+    {
+      'email': email,
+      'password': password,
+    },
+  );
+
+  /// Refresh access token
+  _i3.Future<Map<String, dynamic>> refresh({required String refreshToken}) =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'auth',
+        'refresh',
+        {'refreshToken': refreshToken},
+      );
+
+  /// Logout (revoke refresh token)
+  _i3.Future<Map<String, dynamic>> logout({required String refreshToken}) =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'auth',
+        'logout',
+        {'refreshToken': refreshToken},
+      );
+
+  /// Logout from all devices
+  _i3.Future<Map<String, dynamic>> logoutAll({required String authHeader}) =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'auth',
+        'logoutAll',
+        {'authHeader': authHeader},
+      );
+
+  /// Get current user profile
+  _i3.Future<Map<String, dynamic>> me({required String authHeader}) =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'auth',
+        'me',
+        {'authHeader': authHeader},
+      );
+
+  /// Update user profile
+  _i3.Future<Map<String, dynamic>> updateProfile({
+    required String authHeader,
+    String? name,
+    String? avatarUrl,
+  }) => caller.callServerEndpoint<Map<String, dynamic>>(
+    'auth',
+    'updateProfile',
+    {
+      'authHeader': authHeader,
+      'name': name,
+      'avatarUrl': avatarUrl,
+    },
+  );
+
+  /// Change password
+  _i3.Future<Map<String, dynamic>> changePassword({
+    required String authHeader,
+    required String currentPassword,
+    required String newPassword,
+  }) => caller.callServerEndpoint<Map<String, dynamic>>(
+    'auth',
+    'changePassword',
+    {
+      'authHeader': authHeader,
+      'currentPassword': currentPassword,
+      'newPassword': newPassword,
+    },
+  );
+
+  /// OAuth2 callback handler (for Google/Apple sign-in)
+  _i3.Future<Map<String, dynamic>> oauthCallback({
+    required String provider,
+    required String code,
+    String? state,
+  }) => caller.callServerEndpoint<Map<String, dynamic>>(
+    'auth',
+    'oauthCallback',
+    {
+      'provider': provider,
+      'code': code,
+      'state': state,
+    },
+  );
+}
+
+/// {@category Endpoint}
 class EndpointDocument extends _i2.EndpointRef {
   EndpointDocument(_i2.EndpointCaller caller) : super(caller);
 
@@ -246,11 +442,11 @@ class EndpointDocument extends _i2.EndpointRef {
   String get name => 'document';
 
   /// Create a new document from text
-  _i3.Future<_i5.Document> createFromText({
+  _i3.Future<_i6.Document> createFromText({
     required String title,
     required String text,
     required int userId,
-  }) => caller.callServerEndpoint<_i5.Document>(
+  }) => caller.callServerEndpoint<_i6.Document>(
     'document',
     'createFromText',
     {
@@ -261,11 +457,11 @@ class EndpointDocument extends _i2.EndpointRef {
   );
 
   /// Create a new document from URL
-  _i3.Future<_i5.Document> createFromUrl({
+  _i3.Future<_i6.Document> createFromUrl({
     required String title,
     required String url,
     required int userId,
-  }) => caller.callServerEndpoint<_i5.Document>(
+  }) => caller.callServerEndpoint<_i6.Document>(
     'document',
     'createFromUrl',
     {
@@ -275,11 +471,28 @@ class EndpointDocument extends _i2.EndpointRef {
     },
   );
 
+  /// Create a new document from image (base64)
+  _i3.Future<_i6.Document> createFromImage({
+    required String title,
+    required String imageBase64,
+    required String type,
+    required int userId,
+  }) => caller.callServerEndpoint<_i6.Document>(
+    'document',
+    'createFromImage',
+    {
+      'title': title,
+      'imageBase64': imageBase64,
+      'type': type,
+      'userId': userId,
+    },
+  );
+
   /// Get all documents for a user
-  _i3.Future<List<_i5.Document>> getDocuments({
+  _i3.Future<List<_i6.Document>> getDocuments({
     required int userId,
     required int limit,
-  }) => caller.callServerEndpoint<List<_i5.Document>>(
+  }) => caller.callServerEndpoint<List<_i6.Document>>(
     'document',
     'getDocuments',
     {
@@ -289,8 +502,8 @@ class EndpointDocument extends _i2.EndpointRef {
   );
 
   /// Get a single document by ID
-  _i3.Future<_i5.Document?> getDocument(int id) =>
-      caller.callServerEndpoint<_i5.Document?>(
+  _i3.Future<_i6.Document?> getDocument(int id) =>
+      caller.callServerEndpoint<_i6.Document?>(
         'document',
         'getDocument',
         {'id': id},
@@ -312,6 +525,313 @@ class EndpointDocument extends _i2.EndpointRef {
       );
 }
 
+/// Health check endpoint for monitoring and orchestration
+/// {@category Endpoint}
+class EndpointHealth extends _i2.EndpointRef {
+  EndpointHealth(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'health';
+
+  /// Basic health check - returns 200 if service is running
+  _i3.Future<Map<String, dynamic>> check() =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'health',
+        'check',
+        {},
+      );
+
+  /// Detailed health check with dependencies
+  _i3.Future<Map<String, dynamic>> detailed() =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'health',
+        'detailed',
+        {},
+      );
+
+  /// Readiness probe for Kubernetes/orchestration
+  _i3.Future<Map<String, dynamic>> ready() =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'health',
+        'ready',
+        {},
+      );
+
+  /// Liveness probe
+  _i3.Future<Map<String, dynamic>> live() =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'health',
+        'live',
+        {},
+      );
+
+  /// Get service metrics
+  _i3.Future<Map<String, dynamic>> metrics() =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'health',
+        'metrics',
+        {},
+      );
+}
+
+/// ═══════════════════════════════════════════════════════════════════════════════
+/// 🧠 RECALL BUTLER - MCP HTTP ENDPOINT
+/// ═══════════════════════════════════════════════════════════════════════════════
+///
+/// Exposes MCP functionality via HTTP for web-based integrations
+/// ═══════════════════════════════════════════════════════════════════════════════
+/// {@category Endpoint}
+class EndpointMcp extends _i2.EndpointRef {
+  EndpointMcp(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'mcp';
+
+  /// Get MCP server manifest
+  /// Returns the full MCP manifest with tools, resources, and prompts
+  _i3.Future<Map<String, dynamic>> getManifest() =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'mcp',
+        'getManifest',
+        {},
+      );
+
+  /// List available MCP tools
+  _i3.Future<List<Map<String, dynamic>>> listTools() =>
+      caller.callServerEndpoint<List<Map<String, dynamic>>>(
+        'mcp',
+        'listTools',
+        {},
+      );
+
+  /// List available MCP resources
+  _i3.Future<List<Map<String, dynamic>>> listResources() =>
+      caller.callServerEndpoint<List<Map<String, dynamic>>>(
+        'mcp',
+        'listResources',
+        {},
+      );
+
+  /// List available MCP prompts
+  _i3.Future<List<Map<String, dynamic>>> listPrompts() =>
+      caller.callServerEndpoint<List<Map<String, dynamic>>>(
+        'mcp',
+        'listPrompts',
+        {},
+      );
+
+  /// Execute an MCP tool
+  _i3.Future<Map<String, dynamic>> executeTool(
+    String toolName,
+    Map<String, dynamic> arguments,
+  ) => caller.callServerEndpoint<Map<String, dynamic>>(
+    'mcp',
+    'executeTool',
+    {
+      'toolName': toolName,
+      'arguments': arguments,
+    },
+  );
+
+  /// Read an MCP resource
+  _i3.Future<Map<String, dynamic>> readResource(String uri) =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'mcp',
+        'readResource',
+        {'uri': uri},
+      );
+
+  /// Get an MCP prompt
+  _i3.Future<Map<String, dynamic>> getPrompt(
+    String promptName,
+    Map<String, dynamic> arguments,
+  ) => caller.callServerEndpoint<Map<String, dynamic>>(
+    'mcp',
+    'getPrompt',
+    {
+      'promptName': promptName,
+      'arguments': arguments,
+    },
+  );
+
+  /// Handle raw MCP JSON-RPC request
+  _i3.Future<Map<String, dynamic>> handleJsonRpc(
+    Map<String, dynamic> request,
+  ) => caller.callServerEndpoint<Map<String, dynamic>>(
+    'mcp',
+    'handleJsonRpc',
+    {'request': request},
+  );
+}
+
+/// ═══════════════════════════════════════════════════════════════════════════════
+/// ⚡ REAL-TIME & WEB5 ENDPOINTS
+/// ═══════════════════════════════════════════════════════════════════════════════
+///
+/// FastAPI-style async endpoints for:
+/// - Real-time event subscriptions
+/// - WebSocket connection info
+/// - Web5 decentralized identity
+/// ═══════════════════════════════════════════════════════════════════════════════
+/// {@category Endpoint}
+class EndpointRealtime extends _i2.EndpointRef {
+  EndpointRealtime(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'realtime';
+
+  /// Get SSE connection info for client
+  _i3.Future<Map<String, dynamic>> getSSEInfo() =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'realtime',
+        'getSSEInfo',
+        {},
+      );
+
+  /// Get WebSocket connection info
+  _i3.Future<Map<String, dynamic>> getWebSocketInfo() =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'realtime',
+        'getWebSocketInfo',
+        {},
+      );
+
+  /// Trigger a test event (for debugging)
+  _i3.Future<Map<String, dynamic>> triggerTestEvent({
+    required int userId,
+    required String eventType,
+    Map<String, dynamic>? data,
+  }) => caller.callServerEndpoint<Map<String, dynamic>>(
+    'realtime',
+    'triggerTestEvent',
+    {
+      'userId': userId,
+      'eventType': eventType,
+      'data': data,
+    },
+  );
+
+  /// Create a new Web5 decentralized identity
+  _i3.Future<Map<String, dynamic>> createWeb5Identity({
+    String? name,
+    String? email,
+  }) => caller.callServerEndpoint<Map<String, dynamic>>(
+    'realtime',
+    'createWeb5Identity',
+    {
+      'name': name,
+      'email': email,
+    },
+  );
+
+  /// Connect to existing Web5 identity
+  _i3.Future<Map<String, dynamic>> connectWeb5Identity({required String did}) =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'realtime',
+        'connectWeb5Identity',
+        {'did': did},
+      );
+
+  /// Store a memory in user's Decentralized Web Node
+  _i3.Future<Map<String, dynamic>> storeInDWN({
+    required String title,
+    required String content,
+    required String sourceType,
+    Map<String, dynamic>? metadata,
+  }) => caller.callServerEndpoint<Map<String, dynamic>>(
+    'realtime',
+    'storeInDWN',
+    {
+      'title': title,
+      'content': content,
+      'sourceType': sourceType,
+      'metadata': metadata,
+    },
+  );
+
+  /// Share memories with another user via Verifiable Credential
+  _i3.Future<Map<String, dynamic>> shareMemories({
+    required String recipientDid,
+    required List<String> memoryIds,
+    required int expiresInDays,
+  }) => caller.callServerEndpoint<Map<String, dynamic>>(
+    'realtime',
+    'shareMemories',
+    {
+      'recipientDid': recipientDid,
+      'memoryIds': memoryIds,
+      'expiresInDays': expiresInDays,
+    },
+  );
+
+  /// Export Web5 identity for backup
+  _i3.Future<Map<String, dynamic>> exportWeb5Identity() =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'realtime',
+        'exportWeb5Identity',
+        {},
+      );
+
+  /// Get current Web5 DID
+  _i3.Future<Map<String, dynamic>> getCurrentDID() =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'realtime',
+        'getCurrentDID',
+        {},
+      );
+
+  /// Get real-time sync status
+  _i3.Future<Map<String, dynamic>> getSyncStatus({required int userId}) =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'realtime',
+        'getSyncStatus',
+        {'userId': userId},
+      );
+
+  /// Trigger manual sync
+  _i3.Future<Map<String, dynamic>> triggerSync({required int userId}) =>
+      caller.callServerEndpoint<Map<String, dynamic>>(
+        'realtime',
+        'triggerSync',
+        {'userId': userId},
+      );
+}
+
+/// {@category Endpoint}
+class EndpointReminder extends _i2.EndpointRef {
+  EndpointReminder(_i2.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'reminder';
+
+  _i3.Future<List<_i7.Reminder>> getReminders() =>
+      caller.callServerEndpoint<List<_i7.Reminder>>(
+        'reminder',
+        'getReminders',
+        {},
+      );
+
+  _i3.Future<_i7.Reminder> createReminder(_i7.Reminder reminder) =>
+      caller.callServerEndpoint<_i7.Reminder>(
+        'reminder',
+        'createReminder',
+        {'reminder': reminder},
+      );
+
+  _i3.Future<_i7.Reminder> updateReminder(_i7.Reminder reminder) =>
+      caller.callServerEndpoint<_i7.Reminder>(
+        'reminder',
+        'updateReminder',
+        {'reminder': reminder},
+      );
+
+  _i3.Future<void> deleteReminder(int id) => caller.callServerEndpoint<void>(
+    'reminder',
+    'deleteReminder',
+    {'id': id},
+  );
+}
+
 /// {@category Endpoint}
 class EndpointSearch extends _i2.EndpointRef {
   EndpointSearch(_i2.EndpointCaller caller) : super(caller);
@@ -319,12 +839,12 @@ class EndpointSearch extends _i2.EndpointRef {
   @override
   String get name => 'search';
 
-  /// Semantic search across documents
-  _i3.Future<_i6.SearchResponse> search({
+  /// Semantic search across documents (now Hybrid)
+  _i3.Future<_i8.SearchResponse> search({
     required String query,
     required int userId,
     required int topK,
-  }) => caller.callServerEndpoint<_i6.SearchResponse>(
+  }) => caller.callServerEndpoint<_i8.SearchResponse>(
     'search',
     'search',
     {
@@ -335,11 +855,11 @@ class EndpointSearch extends _i2.EndpointRef {
   );
 
   /// Quick search returning just results
-  _i3.Future<List<_i7.SearchResult>> quickSearch({
+  _i3.Future<List<_i9.SearchResult>> quickSearch({
     required String query,
     required int userId,
     required int topK,
-  }) => caller.callServerEndpoint<List<_i7.SearchResult>>(
+  }) => caller.callServerEndpoint<List<_i9.SearchResult>>(
     'search',
     'quickSearch',
     {
@@ -358,13 +878,13 @@ class EndpointSuggestion extends _i2.EndpointRef {
   String get name => 'suggestion';
 
   /// Create a custom reminder for a document
-  _i3.Future<_i8.Suggestion> createReminder({
+  _i3.Future<_i10.Suggestion> createReminder({
     required int documentId,
     required String title,
     required String description,
     required DateTime scheduledAt,
     required int userId,
-  }) => caller.callServerEndpoint<_i8.Suggestion>(
+  }) => caller.callServerEndpoint<_i10.Suggestion>(
     'suggestion',
     'createReminder',
     {
@@ -377,10 +897,10 @@ class EndpointSuggestion extends _i2.EndpointRef {
   );
 
   /// Get all suggestions for a user
-  _i3.Future<List<_i8.Suggestion>> getSuggestions({
+  _i3.Future<List<_i10.Suggestion>> getSuggestions({
     required int userId,
     String? state,
-  }) => caller.callServerEndpoint<List<_i8.Suggestion>>(
+  }) => caller.callServerEndpoint<List<_i10.Suggestion>>(
     'suggestion',
     'getSuggestions',
     {
@@ -398,24 +918,24 @@ class EndpointSuggestion extends _i2.EndpointRef {
       );
 
   /// Accept a suggestion
-  _i3.Future<_i8.Suggestion> accept(int id) =>
-      caller.callServerEndpoint<_i8.Suggestion>(
+  _i3.Future<_i10.Suggestion> accept(int id) =>
+      caller.callServerEndpoint<_i10.Suggestion>(
         'suggestion',
         'accept',
         {'id': id},
       );
 
   /// Dismiss a suggestion
-  _i3.Future<_i8.Suggestion> dismiss(int id) =>
-      caller.callServerEndpoint<_i8.Suggestion>(
+  _i3.Future<_i10.Suggestion> dismiss(int id) =>
+      caller.callServerEndpoint<_i10.Suggestion>(
         'suggestion',
         'dismiss',
         {'id': id},
       );
 
   /// Get suggestion by ID
-  _i3.Future<_i8.Suggestion?> getSuggestion(int id) =>
-      caller.callServerEndpoint<_i8.Suggestion?>(
+  _i3.Future<_i10.Suggestion?> getSuggestion(int id) =>
+      caller.callServerEndpoint<_i10.Suggestion?>(
         'suggestion',
         'getSuggestion',
         {'id': id},
@@ -432,8 +952,8 @@ class EndpointGreeting extends _i2.EndpointRef {
   String get name => 'greeting';
 
   /// Returns a personalized greeting message: "Hello {name}".
-  _i3.Future<_i9.Greeting> hello(String name) =>
-      caller.callServerEndpoint<_i9.Greeting>(
+  _i3.Future<_i11.Greeting> hello(String name) =>
+      caller.callServerEndpoint<_i11.Greeting>(
         'greeting',
         'hello',
         {'name': name},
@@ -471,7 +991,7 @@ class Client extends _i2.ServerpodClientShared {
     bool? disconnectStreamsOnLostInternetConnection,
   }) : super(
          host,
-         _i10.Protocol(),
+         _i12.Protocol(),
          securityContext: securityContext,
          streamingConnectionTimeout: streamingConnectionTimeout,
          connectionTimeout: connectionTimeout,
@@ -482,7 +1002,14 @@ class Client extends _i2.ServerpodClientShared {
        ) {
     emailIdp = EndpointEmailIdp(this);
     jwtRefresh = EndpointJwtRefresh(this);
+    action = EndpointAction(this);
+    analytics = EndpointAnalytics(this);
+    auth = EndpointAuth(this);
     document = EndpointDocument(this);
+    health = EndpointHealth(this);
+    mcp = EndpointMcp(this);
+    realtime = EndpointRealtime(this);
+    reminder = EndpointReminder(this);
     search = EndpointSearch(this);
     suggestion = EndpointSuggestion(this);
     greeting = EndpointGreeting(this);
@@ -493,7 +1020,21 @@ class Client extends _i2.ServerpodClientShared {
 
   late final EndpointJwtRefresh jwtRefresh;
 
+  late final EndpointAction action;
+
+  late final EndpointAnalytics analytics;
+
+  late final EndpointAuth auth;
+
   late final EndpointDocument document;
+
+  late final EndpointHealth health;
+
+  late final EndpointMcp mcp;
+
+  late final EndpointRealtime realtime;
+
+  late final EndpointReminder reminder;
 
   late final EndpointSearch search;
 
@@ -507,7 +1048,14 @@ class Client extends _i2.ServerpodClientShared {
   Map<String, _i2.EndpointRef> get endpointRefLookup => {
     'emailIdp': emailIdp,
     'jwtRefresh': jwtRefresh,
+    'action': action,
+    'analytics': analytics,
+    'auth': auth,
     'document': document,
+    'health': health,
+    'mcp': mcp,
+    'realtime': realtime,
+    'reminder': reminder,
     'search': search,
     'suggestion': suggestion,
     'greeting': greeting,

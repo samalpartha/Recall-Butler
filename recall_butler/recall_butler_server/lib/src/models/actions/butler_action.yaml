@@ -1,0 +1,7 @@
+class: ButlerAction
+fields:
+  userId: int
+  description: String
+  confidence: double
+  status: ActionStatus
+  createdAt: DateTime

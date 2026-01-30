@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'dart:math' as math;
 
 import '../theme/vibrant_theme.dart';
+import '../widgets/circular_butler_logo.dart';
 import 'onboarding_screen.dart';
 
 /// Animated Splash Screen with particle effects
@@ -98,75 +99,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                     animation: _pulseController,
                     builder: (context, child) {
                       final size = 200 + (_pulseController.value * 10);
-                      return Container(
-                        width: size,
-                        height: size,
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF4FACFE).withOpacity(0.4),
-                              blurRadius: 40 + (_pulseController.value * 20),
-                              spreadRadius: 10,
-                            ),
-                          ],
-                        ),
-                        child: Image.asset(
-                          'assets/images/logo.png',
-                          fit: BoxFit.contain,
-                          filterQuality: FilterQuality.high,
-                          errorBuilder: (context, error, stackTrace) {
-                            // Fallback to styled text logo
-                            return Container(
-                              padding: const EdgeInsets.all(30),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(30),
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFF1E3A5F), Color(0xFF2D5A8A)],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                border: Border.all(
-                                  color: const Color(0xFF4FACFE).withOpacity(0.5),
-                                  width: 4,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF4FACFE).withOpacity(0.3),
-                                    blurRadius: 30,
-                                    spreadRadius: 5,
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  ShaderMask(
-                                    shaderCallback: (bounds) => const LinearGradient(
-                                      colors: [Color(0xFF4FACFE), Color(0xFF00D4FF)],
-                                    ).createShader(bounds),
-                                    child: const Text(
-                                      'FB',
-                                      style: TextStyle(
-                                        fontSize: 80,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                  const Text(
-                                    'BUTLER',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF4FACFE),
-                                      letterSpacing: 6,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
+                      return CircularButlerLogo(
+                        size: size,
                       );
                     },
                   ).animate()

@@ -11,21 +11,30 @@ Recall Butler transforms unorganized inputs (text, screenshots, links, voice not
 
 ---
 
+## 🚀 Live Demo
+
+- **Frontend App**: [https://recall-butler-web.web.app](https://recall-butler-web.web.app)
+- **Backend API**: [https://recall-butler-server-fozkypxpga-uc.a.run.app](https://recall-butler-server-fozkypxpga-uc.a.run.app)
+- **Health Check**: [https://recall-butler-server-fozkypxpga-uc.a.run.app/health](https://recall-butler-server-fozkypxpga-uc.a.run.app/health)
+
 ## ✨ Features
 
 ### 📥 Smart Ingest
+
 - **Upload files** (PDFs, images, documents)
 - **Paste text** directly from clipboard
 - **Save URLs** for automatic content extraction
 - Immediate "Queued" state with real-time processing updates
 
 ### 🔍 Semantic Recall
+
 - Natural language search across all your memories
 - **AI-powered answers** with grounded sources
 - Top 3 source snippets with relevance scores
 - One-click document navigation
 
 ### 🤵 Butler Actions
+
 - **Smart suggestions** based on document content:
   - Invoice → Payment reminder
   - Itinerary → Check-in reminder
@@ -33,10 +42,22 @@ Recall Butler transforms unorganized inputs (text, screenshots, links, voice not
 - **Approve or dismiss** with one tap
 - **Scheduled reminders** via Serverpod future calls
 
-### ⚡ Real-Time Updates
 - Live processing status via WebSocket
 - Progress indicators: QUEUED → EXTRACTING → EMBEDDING → READY
 - Instant notifications when processing completes
+
+### 🔌 Offline-First
+
+- **Works without internet**: Create notes and capture thoughts anytime
+- **Local Caching**: Instant access to your recent memories
+- **Auto-Sync**: Changes sync automatically when connection returns
+- **Idempotent Sync**: Smart hashing prevents duplicate entries
+
+### 🛡️ Reliability
+
+- **Content Hashing**: Prevents duplicates if you click twice
+- **Queue System**: Persistent local queue for offline actions
+- **Graceful Fallbacks**: API Service automatically switches to offline mode
 
 ---
 
@@ -178,6 +199,7 @@ recall-butler/
 ### Sample Demo Data
 
 The app includes mock data for demonstration:
+
 - Q4 Invoice from Acme Corp ($5,400 due Jan 30)
 - NYC Flight Itinerary (Jan 20-24)
 - Team Standup Notes
@@ -198,6 +220,7 @@ The app includes mock data for demonstration:
 ### Embedding Model
 
 Using OpenAI `text-embedding-3-small`:
+
 - **Dimension**: 1536
 - **Chunk size**: 500 tokens
 - **Overlap**: 100 tokens
@@ -231,24 +254,29 @@ Using OpenAI `text-embedding-3-small`:
 
 ## 🚢 Deployment
 
-### Backend (Fly.io/Render)
+### Backend (Google Cloud Run)
+
+The backend is containerized and deployed to Cloud Run.
 
 ```bash
-# Build server
-dart compile exe recall_butler_server/bin/main.dart
-
-# Deploy with your preferred platform
-# Ensure DATABASE_URL and OPENAI_API_KEY are set
+# Deploy to Cloud Run (handles build, push, migration, and deploy)
+./deploy_gcp.sh
 ```
 
-### Frontend (Vercel/Firebase)
+**Key Configuration:**
+
+- **Database**: Cloud SQL (PostgreSQL 16)
+- **Connectivity**: Public IP (TCP 5432)
+- **Secrets**: Managed via Google Secret Manager
+
+### Frontend (Firebase Hosting)
+
+The frontend is a Flutter Web app hosted on Firebase.
 
 ```bash
-# Build web app
-cd recall_butler_flutter
-flutter build web --release
-
-# Deploy build/web directory
+# Deploy to Firebase Hosting
+# Usage: ./deploy_frontend.sh <BACKEND_URL>
+./deploy_frontend.sh https://recall-butler-server-fozkypxpga-uc.a.run.app
 ```
 
 ---

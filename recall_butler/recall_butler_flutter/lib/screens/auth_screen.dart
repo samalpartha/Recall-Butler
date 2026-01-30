@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../theme/vibrant_theme.dart';
+import '../widgets/circular_butler_logo.dart';
 import 'home_screen.dart';
 
 /// Authentication Screen with Social Login & Email/Password
@@ -687,69 +688,9 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
         final scale = 1.0 + 0.02 * _pulseController.value;
         return Transform.scale(
           scale: scale,
-          child: Container(
-            width: 180,
-            height: 180,
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF4FACFE).withOpacity(0.3),
-                  blurRadius: 30 + 10 * _pulseController.value,
-                  spreadRadius: 5,
-                ),
-              ],
+            child: const CircularButlerLogo(
+              size: 180,
             ),
-            child: Image.asset(
-              'assets/images/logo.png',
-              fit: BoxFit.contain,
-              filterQuality: FilterQuality.high,
-              errorBuilder: (context, error, stackTrace) {
-                // Fallback to styled text logo
-                return Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF1E3A5F), Color(0xFF2D5A8A)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    border: Border.all(
-                      color: const Color(0xFF4FACFE).withOpacity(0.5),
-                      width: 3,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ShaderMask(
-                        shaderCallback: (bounds) => const LinearGradient(
-                          colors: [Color(0xFF4FACFE), Color(0xFF00D4FF)],
-                        ).createShader(bounds),
-                        child: const Text(
-                          'FB',
-                          style: TextStyle(
-                            fontSize: 60,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      const Text(
-                        'BUTLER',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF4FACFE),
-                          letterSpacing: 4,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
         );
       },
     ).animate().fadeIn().scale(begin: const Offset(0.5, 0.5), duration: 500.ms, curve: Curves.easeOutBack);

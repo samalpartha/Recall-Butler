@@ -1,0 +1,6 @@
+class: SendEmailAction
+extends: ButlerAction
+fields:
+  recipient: String
+  subject: String
+  body: String

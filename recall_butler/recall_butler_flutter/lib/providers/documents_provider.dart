@@ -90,6 +90,28 @@ class DocumentsNotifier extends StateNotifier<AsyncValue<List<Document>>> {
     return doc;
   }
 
+  Future<Document> createFromImage({
+    required String title,
+    required String imageBase64,
+    required String type,
+  }) async {
+    final doc = await _api.createFromImage(
+      title: title,
+      imageBase64: imageBase64,
+      type: type,
+    );
+    await _loadDocuments();
+
+    // Send notification
+    final notificationService = NotificationService();
+    await notificationService.notifyDocumentReady(
+      documentId: doc.id ?? 0,
+      title: title,
+    );
+
+    return doc;
+  }
+
   Future<Document> uploadFile({
     required String title,
     required String fileName,

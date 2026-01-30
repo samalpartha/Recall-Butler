@@ -1,10 +1,13 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../theme/vibrant_theme.dart';
+import '../widgets/circular_butler_logo.dart';
+import '../widgets/offline_indicator.dart';
 import '../providers/documents_provider.dart';
 import '../providers/suggestions_provider.dart';
 import 'ai_agent_screen.dart';
@@ -19,11 +22,11 @@ import 'analytics_dashboard_screen.dart';
 import 'calendar_screen.dart';
 import 'smart_reminders_screen.dart';
 import 'workspaces_screen.dart';
-import 'web5_profile_screen.dart';
-import 'help_screen.dart';
-import 'accessibility_screen.dart';
 import 'settings_screen.dart';
 import 'auth_screen.dart';
+import 'daily_rewind_screen.dart';
+import 'timeline_screen.dart';
+import 'help_screen.dart';
 
 /// Vibrant Home Screen with Analytics & Quick Actions
 class HomeScreen extends ConsumerStatefulWidget {
@@ -62,6 +65,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
     );
     
     _quickActions = [
+      {'icon': LucideIcons.playCircle, 'label': 'Rewind', 'color': Colors.redAccent, 'action': () => _navigateTo(const DailyRewindScreen())},
       {'icon': LucideIcons.plus, 'label': 'Add', 'color': VibrantTheme.primaryGreen, 'action': () => _navigateTo(const IngestScreen())},
       {'icon': LucideIcons.bot, 'label': 'AI Agent', 'color': VibrantTheme.primaryPurple, 'action': () => _navigateTo(const AiAgentScreen())},
       {'icon': LucideIcons.messageCircle, 'label': 'Chat', 'color': VibrantTheme.primaryPink, 'action': () => _navigateTo(const ChatScreen())},
@@ -94,6 +98,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
       _showQuickActions = !_showQuickActions;
       _hoveredLabel = null;
     });
+    HapticFeedback.selectionClick();
     if (_showQuickActions) {
       _fabController.forward();
     } else {
@@ -117,6 +122,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
               child: _selectedNavIndex == 0 
                 ? CustomScrollView(
                     slivers: [
+                      const SliverToBoxAdapter(child: OfflineBanner()),
                       SliverToBoxAdapter(child: _buildAppBar()),
                       SliverToBoxAdapter(child: _buildGreeting()),
                       SliverToBoxAdapter(child: _buildQuickStats()),
@@ -256,6 +262,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
       onExit: (_) => setState(() => _hoveredLabel = null),
       child: GestureDetector(
         onTap: () {
+          HapticFeedback.mediumImpact();
           _toggleQuickActions();
           (action['action'] as Function)();
         },
@@ -414,6 +421,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
           
           const SizedBox(width: 12),
           
+          const SizedBox(width: 12),
+
+          const CircularButlerLogo(size: 40, withShadow: false),
+          
+          const SizedBox(width: 12),
+          
           const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -437,6 +450,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
             ),
           ),
           
+          // Help Guide
+          GestureDetector(
+            onTap: () => _navigateTo(const HelpScreen()), // Fixed navigation
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                color: VibrantTheme.bgCard,
+                border: Border.all(color: VibrantTheme.primaryBlue.withOpacity(0.3)),
+              ),
+              child: const Icon(LucideIcons.helpCircle, size: 22, color: Colors.white),
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
           // Notification bell
           GestureDetector(
             onTap: () => _navigateTo(const SmartRemindersScreen()),
@@ -445,10 +474,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
                 color: VibrantTheme.bgCard,
+                border: Border.all(color: VibrantTheme.primaryBlue.withOpacity(0.3)),
               ),
               child: Stack(
                 children: [
-                  const Icon(LucideIcons.bell, size: 22),
+                  const Icon(LucideIcons.bell, size: 22, color: Colors.white),
                   Positioned(
                     right: 0,
                     top: 0,
@@ -476,8 +506,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
                 color: VibrantTheme.bgCard,
+                border: Border.all(color: VibrantTheme.primaryBlue.withOpacity(0.3)),
               ),
-              child: const Icon(LucideIcons.settings, size: 22),
+              child: const Icon(LucideIcons.settings, size: 22, color: Colors.white),
             ),
           ),
         ],
@@ -568,6 +599,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
           return Expanded(
             child: GestureDetector(
               onTap: () {
+                HapticFeedback.lightImpact();
                 if (index == 1) setState(() => _selectedNavIndex = 1);
                 if (index == 2) setState(() => _selectedNavIndex = 3);
               },
@@ -766,10 +798,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with TickerProviderStat
 
   Widget _buildQuickActionsGrid() {
     final actions = [
+      {'icon': LucideIcons.playCircle, 'label': 'Rewind', 'color': Colors.redAccent, 'gradient': VibrantTheme.gradientWarning, 'screen': const DailyRewindScreen()},
+      {'icon': LucideIcons.history, 'label': 'Timeline', 'color': Colors.blueAccent, 'gradient': VibrantTheme.gradientSecondary, 'screen': const TimelineScreen()},
       {'icon': LucideIcons.bot, 'label': 'AI Agent', 'color': VibrantTheme.primaryPurple, 'gradient': VibrantTheme.gradientPrimary, 'screen': const AiAgentScreen()},
       {'icon': LucideIcons.network, 'label': 'Graph', 'color': VibrantTheme.primaryCyan, 'gradient': VibrantTheme.gradientSecondary, 'screen': const KnowledgeGraphVizScreen()},
       {'icon': LucideIcons.mic, 'label': 'Voice', 'color': VibrantTheme.primaryPink, 'gradient': VibrantTheme.gradientPrimary, 'screen': const VoiceCaptureScreen()},
-      {'icon': LucideIcons.camera, 'label': 'Scan', 'color': VibrantTheme.primaryOrange, 'gradient': VibrantTheme.gradientWarning, 'screen': const CameraCaptureScreen()},
     ];
 
     return Padding(

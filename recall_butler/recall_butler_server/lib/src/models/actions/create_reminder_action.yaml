@@ -1,0 +1,6 @@
+class: CreateReminderAction
+extends: ButlerAction
+fields:
+  title: String
+  dueAt: DateTime
+  priority: String?

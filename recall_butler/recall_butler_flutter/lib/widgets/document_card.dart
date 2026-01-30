@@ -153,9 +153,10 @@ class _StatusBadge extends StatelessWidget {
 
     switch (status.toUpperCase()) {
       case 'QUEUED':
+      case 'PENDING_SYNC':
         color = AppTheme.statusWarning;
-        label = 'Queued';
-        icon = LucideIcons.clock;
+        label = 'Pending Sync';
+        icon = LucideIcons.uploadCloud;
       case 'PROCESSING':
       case 'EMBEDDING':
         color = AppTheme.statusProcessing;

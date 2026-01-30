@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "gen-lang-client-0692818755"
+  },
+  "targets": {
+    "gen-lang-client-0692818755": {
+      "hosting": {
+        "app": [
+          "recall-butler-web"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

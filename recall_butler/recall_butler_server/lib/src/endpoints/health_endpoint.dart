@@ -20,7 +20,7 @@ class HealthEndpoint extends Endpoint {
     // Database check
     try {
       final dbStart = DateTime.now();
-      await session.db.query('SELECT 1');
+      await session.db.unsafeQuery('SELECT 1');
       final dbLatency = DateTime.now().difference(dbStart).inMilliseconds;
       
       checks['database'] = {
@@ -64,7 +64,7 @@ class HealthEndpoint extends Endpoint {
   Future<Map<String, dynamic>> ready(Session session) async {
     try {
       // Check database connection
-      await session.db.query('SELECT 1');
+      await session.db.unsafeQuery('SELECT 1');
       
       return {
         'ready': true,

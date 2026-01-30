@@ -10,6 +10,7 @@ class VibrantTheme {
   static const Color primaryGreen = Color(0xFF10B981);    // Success green
   static const Color primaryOrange = Color(0xFFF97316);   // Warning orange
   static const Color primaryYellow = Color(0xFFFACC15);   // Accent yellow
+  static const Color primaryRed = Color(0xFFFF3B30);      // Utility red
   
   // Background colors - Darker navy tones
   static const Color bgDark = Color(0xFF0D1B2A);

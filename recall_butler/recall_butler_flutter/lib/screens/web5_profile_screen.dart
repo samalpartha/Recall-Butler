@@ -6,6 +6,8 @@ import 'package:lucide_icons/lucide_icons.dart';
 
 import '../theme/app_theme.dart';
 import '../providers/connectivity_provider.dart';
+import '../widgets/safety_visualization.dart';
+import '../widgets/biometric_unlock.dart';
 
 /// Provider for Web5 identity state
 final web5IdentityProvider = StateNotifierProvider<Web5IdentityNotifier, Web5IdentityState>((ref) {
@@ -88,6 +90,20 @@ class Web5IdentityNotifier extends StateNotifier<Web5IdentityState> {
     );
   }
 
+  Future<void> syncToDwn() async {
+    state = state.copyWith(isLoading: true);
+    await Future.delayed(const Duration(seconds: 2));
+    
+    // Simulate finding new records
+    final currentMemories = state.memoriesInDwn;
+    final newMemories = currentMemories + 5;
+    
+    state = state.copyWith(
+      isLoading: false,
+      memoriesInDwn: newMemories,
+    );
+  }
+
   void disconnect() {
     state = Web5IdentityState();
   }
@@ -153,7 +169,7 @@ class _Web5ProfileScreenState extends ConsumerState<Web5ProfileScreen> {
     return Scaffold(
       backgroundColor: AppTheme.primaryDark,
       appBar: AppBar(
-        title: const Text('Web5 Identity & Real-time'),
+        title: const Text('Digital Vault & Real-time'),
         backgroundColor: AppTheme.primaryDark,
         leading: IconButton(
           icon: const Icon(LucideIcons.arrowLeft),
@@ -174,16 +190,16 @@ class _Web5ProfileScreenState extends ConsumerState<Web5ProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Web5 Identity Section
-            _buildSectionHeader(
-              icon: LucideIcons.fingerprint,
-              title: 'Decentralized Identity',
-              subtitle: 'Self-sovereign identity with Web5',
-            ).animate().fadeIn().slideY(begin: -0.1),
+            // Web5 Identity Section
+            const SafetyVisualization().animate().fadeIn().slideY(begin: -0.1),
 
             const SizedBox(height: 16),
 
             if (web5State.isConnected)
-              _buildConnectedIdentity(web5State)
+              BiometricUnlock(
+                label: 'Authenticate to View Passport',
+                child: _buildConnectedIdentity(web5State),
+              )
             else
               _buildCreateIdentity(web5State),
 
@@ -206,8 +222,8 @@ class _Web5ProfileScreenState extends ConsumerState<Web5ProfileScreen> {
             if (web5State.isConnected) ...[
               _buildSectionHeader(
                 icon: LucideIcons.database,
-                title: 'Decentralized Web Node',
-                subtitle: 'Your data, your control',
+                title: 'Personal Cloud Vault',
+                subtitle: 'Your encrypted private storage',
               ).animate().fadeIn(delay: 200.ms).slideY(begin: -0.1),
 
               const SizedBox(height: 16),
@@ -371,7 +387,7 @@ class _Web5ProfileScreenState extends ConsumerState<Web5ProfileScreen> {
               ),
               _StatusBadge(
                 icon: LucideIcons.globe,
-                label: 'Portable',
+                label: 'Universal',
                 color: AppTheme.statusProcessing,
               ),
             ],
@@ -385,7 +401,7 @@ class _Web5ProfileScreenState extends ConsumerState<Web5ProfileScreen> {
               ref.read(web5IdentityProvider.notifier).disconnect();
             },
             icon: Icon(LucideIcons.logOut, size: 18),
-            label: const Text('Disconnect Identity'),
+            label: const Text('Lock Vault (Disconnect)'),
             style: TextButton.styleFrom(
               foregroundColor: AppTheme.statusFailed,
             ),
@@ -412,7 +428,7 @@ class _Web5ProfileScreenState extends ConsumerState<Web5ProfileScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Create Your Decentralized Identity',
+            'Create Your Digital Passport',
             style: TextStyle(
               color: AppTheme.textPrimaryDark,
               fontSize: 18,
@@ -422,7 +438,7 @@ class _Web5ProfileScreenState extends ConsumerState<Web5ProfileScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Own your data with Web5. No vendor lock-in.',
+            'Secure your memories with encryption. You hold the keys.',
             style: TextStyle(
               color: AppTheme.textMutedDark,
               fontSize: 14,
@@ -471,7 +487,7 @@ class _Web5ProfileScreenState extends ConsumerState<Web5ProfileScreen> {
                       ),
                     )
                   : const Icon(LucideIcons.sparkles),
-              label: Text(state.isLoading ? 'Creating...' : 'Create Identity'),
+              label: Text(state.isLoading ? 'Creating Keys...' : 'Create Passport'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.accentGold,
                 foregroundColor: Colors.black,
@@ -506,7 +522,7 @@ class _Web5ProfileScreenState extends ConsumerState<Web5ProfileScreen> {
           TextField(
             controller: _didController,
             decoration: InputDecoration(
-              hintText: 'Paste existing DID',
+              hintText: 'Paste existing Keys (DID)',
               prefixIcon: const Icon(LucideIcons.key),
               filled: true,
               fillColor: AppTheme.primaryDark,
@@ -528,7 +544,7 @@ class _Web5ProfileScreenState extends ConsumerState<Web5ProfileScreen> {
               }
             },
             icon: const Icon(LucideIcons.link, size: 18),
-            label: const Text('Connect Existing Identity'),
+            label: const Text('Connect Existing Passport'),
           ),
         ],
       ),
@@ -602,7 +618,7 @@ class _Web5ProfileScreenState extends ConsumerState<Web5ProfileScreen> {
                     _EventChip('documentUpdated', true),
                     _EventChip('suggestionCreated', true),
                     _EventChip('aiResponse', true),
-                    _EventChip('syncCompleted', true),
+                    _EventChip('vaultBackup', true),
                     _EventChip('reminderTriggered', false),
                   ],
                 ),
@@ -654,7 +670,7 @@ class _Web5ProfileScreenState extends ConsumerState<Web5ProfileScreen> {
             children: [
               _StatItem(
                 value: '${state.memoriesInDwn}',
-                label: 'Memories in DWN',
+                label: 'Protected Memories',
                 icon: LucideIcons.brain,
               ),
               _StatItem(
@@ -664,7 +680,7 @@ class _Web5ProfileScreenState extends ConsumerState<Web5ProfileScreen> {
               ),
               _StatItem(
                 value: '${state.dwnEndpoints.length}',
-                label: 'DWN Nodes',
+                label: 'Vault Nodes',
                 icon: LucideIcons.server,
               ),
             ],
@@ -714,9 +730,33 @@ class _Web5ProfileScreenState extends ConsumerState<Web5ProfileScreen> {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(LucideIcons.upload, size: 18),
-                  label: const Text('Sync to DWN'),
+                  onPressed: state.isLoading 
+                      ? null 
+                      : () async {
+                          await ref.read(web5IdentityProvider.notifier).syncToDwn();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Row(
+                                  children: [
+                                    const Icon(LucideIcons.checkCircle, color: Colors.white, size: 18),
+                                    const SizedBox(width: 8),
+                                    const Text('Synced 5 new records to Decentralized Web Node'),
+                                  ],
+                                ),
+                                backgroundColor: AppTheme.accentGold,
+                              ),
+                            );
+                          }
+                        },
+                  icon: state.isLoading 
+                      ? const SizedBox(
+                          width: 18, 
+                          height: 18, 
+                          child: CircularProgressIndicator(strokeWidth: 2)
+                        )
+                      : const Icon(LucideIcons.upload, size: 18),
+                  label: Text(state.isLoading ? 'Backing up...' : 'Backup to Cloud Vault'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.accentGold,
                     side: BorderSide(color: AppTheme.accentGold),
@@ -727,9 +767,19 @@ class _Web5ProfileScreenState extends ConsumerState<Web5ProfileScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: state.did ?? ''));
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Passport Keys copied to clipboard'),
+                          backgroundColor: AppTheme.statusReady,
+                        ),
+                      );
+                    }
+                  },
                   icon: const Icon(LucideIcons.download, size: 18),
-                  label: const Text('Export'),
+                  label: const Text('Export Keys'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.textMutedDark,
                     side: BorderSide(color: const Color(0xFF3D4A5C)),

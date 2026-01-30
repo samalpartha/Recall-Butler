@@ -13,6 +13,9 @@ class AppTheme {
   static const Color accentGold = Color(0xFFFFB703);   // Warm gold - primary action
   static const Color accentCopper = Color(0xFFE85D04); // Warm copper - secondary
   static const Color accentTeal = Color(0xFF06D6A0);   // Fresh teal - success
+  static const Color accentCyan = Color(0xFF00D4FF);   // Bright cyan
+  static const Color accentPurple = Color(0xFF9D4EDD); // Vibrant purple - creativity
+  static const Color bgCard = cardDark; // Alias for bgCard
   
   // Status colors - High contrast for visibility
   static const Color statusReady = Color(0xFF06D6A0);      // Green - completed

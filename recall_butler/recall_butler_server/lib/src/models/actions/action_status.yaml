@@ -1,0 +1,8 @@
+enum: ActionStatus
+values:
+  - proposed
+  - confirmed
+  - rejected
+  - executing
+  - completed
+  - failed

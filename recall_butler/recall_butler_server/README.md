@@ -62,6 +62,7 @@
 | **Document Ingestion** | Upload PDFs, images, text files, voice recordings |
 | **AI Chat Interface** | Natural language conversations with your knowledge base |
 | **Smart Search** | Semantic + keyword hybrid search |
+| **API Documentation** | Swagger/OpenAPI available at `/docs` |
 | **Proactive Suggestions** | AI-generated reminders based on context |
 | **Document Scanning** | OCR-powered document capture |
 | **Voice Input** | Speech-to-text for hands-free operation |

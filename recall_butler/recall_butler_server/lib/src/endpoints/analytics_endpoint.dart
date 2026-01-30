@@ -10,36 +10,33 @@ class AnalyticsEndpoint extends Endpoint {
     final sevenDaysAgo = now.subtract(const Duration(days: 7));
     
     // Query documents stats
-    final totalDocuments = await session.db.query(
+    final totalDocuments = await session.db.unsafeQuery(
       'SELECT COUNT(*) as count FROM documents',
     );
-    final documentsThisWeek = await session.db.query(
-      'SELECT COUNT(*) as count FROM documents WHERE created_at >= \$1',
-      parameters: [sevenDaysAgo],
+    final documentsThisWeek = await session.db.unsafeQuery(
+      'SELECT COUNT(*) as count FROM documents WHERE created_at >= \'${sevenDaysAgo.toIso8601String()}\'',
     );
-    final documentsThisMonth = await session.db.query(
-      'SELECT COUNT(*) as count FROM documents WHERE created_at >= \$1',
-      parameters: [thirtyDaysAgo],
+    final documentsThisMonth = await session.db.unsafeQuery(
+      'SELECT COUNT(*) as count FROM documents WHERE created_at >= \'${thirtyDaysAgo.toIso8601String()}\'',
     );
     
     // Query suggestions stats
-    final totalSuggestions = await session.db.query(
+    final totalSuggestions = await session.db.unsafeQuery(
       'SELECT COUNT(*) as count FROM suggestions',
     );
-    final acceptedSuggestions = await session.db.query(
+    final acceptedSuggestions = await session.db.unsafeQuery(
       'SELECT COUNT(*) as count FROM suggestions WHERE status = \'accepted\'',
     );
-    final pendingSuggestions = await session.db.query(
+    final pendingSuggestions = await session.db.unsafeQuery(
       'SELECT COUNT(*) as count FROM suggestions WHERE status = \'pending\'',
     );
     
     // Query search stats
-    final totalSearches = await session.db.query(
+    final totalSearches = await session.db.unsafeQuery(
       'SELECT COUNT(*) as count FROM search_logs',
     );
-    final searchesThisWeek = await session.db.query(
-      'SELECT COUNT(*) as count FROM search_logs WHERE created_at >= \$1',
-      parameters: [sevenDaysAgo],
+    final searchesThisWeek = await session.db.unsafeQuery(
+      'SELECT COUNT(*) as count FROM search_logs WHERE created_at >= \'${sevenDaysAgo.toIso8601String()}\'',
     );
     
     return {
@@ -73,16 +70,16 @@ class AnalyticsEndpoint extends Endpoint {
   Future<List<Map<String, dynamic>>> getActivityTimeline(Session session) async {
     final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
     
-    final result = await session.db.query('''
+    final result = await session.db.unsafeQuery('''
       SELECT 
         DATE(created_at) as date,
         COUNT(*) as documents_added,
         SUM(CASE WHEN status = 'ready' THEN 1 ELSE 0 END) as processed
       FROM documents
-      WHERE created_at >= \$1
+      WHERE created_at >= '${thirtyDaysAgo.toIso8601String()}'
       GROUP BY DATE(created_at)
       ORDER BY date DESC
-    ''', parameters: [thirtyDaysAgo]);
+    ''');
     
     return result.map((row) => {
       'date': row[0]?.toString() ?? '',
@@ -93,7 +90,7 @@ class AnalyticsEndpoint extends Endpoint {
 
   /// Get document type distribution
   Future<List<Map<String, dynamic>>> getDocumentTypes(Session session) async {
-    final result = await session.db.query('''
+    final result = await session.db.unsafeQuery('''
       SELECT 
         COALESCE(content_type, 'unknown') as type,
         COUNT(*) as count
@@ -110,7 +107,7 @@ class AnalyticsEndpoint extends Endpoint {
 
   /// Get top search queries
   Future<List<Map<String, dynamic>>> getTopSearches(Session session, {int limit = 10}) async {
-    final result = await session.db.query('''
+    final result = await session.db.unsafeQuery('''
       SELECT 
         query,
         COUNT(*) as count,
@@ -118,8 +115,8 @@ class AnalyticsEndpoint extends Endpoint {
       FROM search_logs
       GROUP BY query
       ORDER BY count DESC
-      LIMIT \$1
-    ''', parameters: [limit]);
+      LIMIT $limit
+    ''');
     
     return result.map((row) => {
       'query': row[0]?.toString() ?? '',
@@ -134,15 +131,13 @@ class AnalyticsEndpoint extends Endpoint {
     final sevenDaysAgo = now.subtract(const Duration(days: 7));
     
     // Get recent activity metrics
-    final recentDocs = await session.db.query(
-      'SELECT COUNT(*) FROM documents WHERE created_at >= \$1',
-      parameters: [sevenDaysAgo],
+    final recentDocs = await session.db.unsafeQuery(
+      'SELECT COUNT(*) FROM documents WHERE created_at >= \'${sevenDaysAgo.toIso8601String()}\'',
     );
-    final recentSearches = await session.db.query(
-      'SELECT COUNT(*) FROM search_logs WHERE created_at >= \$1',
-      parameters: [sevenDaysAgo],
+    final recentSearches = await session.db.unsafeQuery(
+      'SELECT COUNT(*) FROM search_logs WHERE created_at >= \'${sevenDaysAgo.toIso8601String()}\'',
     );
-    final pendingSuggestions = await session.db.query(
+    final pendingSuggestions = await session.db.unsafeQuery(
       'SELECT COUNT(*) FROM suggestions WHERE status = \'pending\'',
     );
     
@@ -216,7 +211,7 @@ class AnalyticsEndpoint extends Endpoint {
   /// Get knowledge graph data (connections between documents)
   Future<Map<String, dynamic>> getKnowledgeGraph(Session session) async {
     // Get documents with their key fields for node generation
-    final documents = await session.db.query('''
+    final documents = await session.db.unsafeQuery('''
       SELECT id, title, key_fields, created_at
       FROM documents
       WHERE status = 'ready'
